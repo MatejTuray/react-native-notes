@@ -1,42 +1,38 @@
 import React, { Component } from 'react'
 import Home from "../components/Home"
-
+import Details from "../components/Details"
 import { createStackNavigator, createAppContainer } from "react-navigation";
 import CreateNote from '../components/CreateNote';
 import CreateShoppingList from "../components/CreateShoppingList";
+import {connect} from "react-redux"
+
 const RootStack = createStackNavigator(
   {
-    Home: {screen: Home, navigationOptions: {
-      title: "Home", 
-      headerStyle: {
-        backgroundColor: '#1a72b4',
-      },
-      headerTintColor: "white",
-      headerTitleStyle: {
-        color: "white"
-      }
+    Home: {screen: Home, navigationOptions: {      
+      
      
     } },
     CreateNote: {screen: CreateNote, navigationOptions: {
-      title: "Create a note",
-      headerStyle: {
-        backgroundColor: '#1a72b4',
-      },
-      headerTintColor: "white",
-      headerTitleStyle: {
-        color: "white"
-      }
+     
   }},
   CreateShoppingList: {screen: CreateShoppingList, navigationOptions: {
-    title: "Create a list",
+  
+}},
+Details: {screen: Details, navigationOptions: {
+  
+}},
+
+  HomeSelected: {screen: Home, navigationOptions: {
+    title: `Selected items`, 
     headerStyle: {
-      backgroundColor: '#1a72b4',
+      backgroundColor: 'grey',
     },
     headerTintColor: "white",
     headerTitleStyle: {
       color: "white"
     }
-}}
+  
+  } },
 },
   {
     initialRouteName: "Home"
@@ -44,6 +40,8 @@ const RootStack = createStackNavigator(
 );
 
 const AppContainer = createAppContainer(RootStack);
+
+
 
 
 export default AppContainer

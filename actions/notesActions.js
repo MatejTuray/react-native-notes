@@ -5,5 +5,12 @@ const saveNote = (note) => {
     
     }
 }
+const selectNote = (note) => {
+    return {
+        type: "SELECTED_NOTE",
+        payload: note
+    
+    }
+}
 
-export {saveNote,}
+export {saveNote, selectNote}
