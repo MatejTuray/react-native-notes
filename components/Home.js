@@ -10,19 +10,11 @@ import {connect} from "react-redux";
 import Swipeout from 'react-native-swipeout';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import * as Animatable from 'react-native-animatable';
-import {selectNote} from "../actions/notesActions"
+import {selectNote, deleteNote} from "../actions/notesActions"
 import {bindActionCreators} from "redux";
 
-let swipeoutBtnsRight = [
-  {
-    text: 'Right Button'
-  }
-]
-let swipeoutBtnsLeft = [
-  {
-    text: 'Left Button'
-  }
-]
+
+
 
 class Home extends React.Component {
   static navigationOptions = ({ navigation }) => {
@@ -44,6 +36,8 @@ class Home extends React.Component {
     super(props)
     this.datePicker = this.datePicker.bind(this)
     this.handleSelect = this.handleSelect.bind(this)
+    this.handleDelete = this.handleDelete.bind(this)
+
     this.state = {
       text: "",
       title: "",
@@ -53,9 +47,7 @@ class Home extends React.Component {
     }
     
   }
-  componentDidMount(){
-   
-  }
+ 
   componentDidUpdate(){
    
   }
@@ -72,8 +64,22 @@ class Home extends React.Component {
       change: true
     })
   }
-    Vibration.vibrate(50)
+    Vibration.vibrate(50)   
 }
+  handleDelete(){ 
+    for(let elem of this.state.selected){
+    this.props.deleteNote(elem)
+    }
+    this.setState({
+      selected: []
+    })   
+    this.props.navigation.setParams({len: 0})    
+    
+       
+        
+        
+  }
+  
 
   async datePicker() {
     try {
@@ -100,7 +106,14 @@ class Home extends React.Component {
 
   render() {
  
-    
+  
+    let swipeoutBtnsRight = [
+      {
+        text: 'Delete',
+        onPress:() => {this.props.deleteNote(this.props.selectedNote)},
+        type: "delete",
+      }
+    ]
     return (
 
 
@@ -120,16 +133,18 @@ class Home extends React.Component {
         <FlatList
         data={this.props.notes}
         renderItem={({ item }) => (
-          <Swipeout right={swipeoutBtnsRight} left={swipeoutBtnsLeft}>
+          <Swipeout onOpen={() => this.props.selectNote(item)} right={swipeoutBtnsRight}>
           <List.Item
           key={item.key}
           title={item.title}
           description={item.text}
-          style={this.state.selected.includes(item) ? {backgroundColor: "grey"} : {backgroundColor: `#${item.color}`} }
-          onPress={() => {this.props.selectNote(item); this.props.navigation.navigate("Details", {title: item.title})}}
+          style={this.state.selected.includes(item) ?  "#b2b2b2" : item.color && item.color !== "#1a72b4" ? {backgroundColor: `${item.color}`, opacity: 0.9} : {backgroundColor: `#ffffff`}} 
+          onPress={() => {this.props.selectNote(item); this.props.navigation.navigate("Details", {title: item.title, color: item.color})}}
           onLongPress={() => {this.handleSelect(item);this.props.navigation.setParams({len: this.state.selected.length})}}         
-          left={props => <List.Icon {...props} icon={item.text? "note" : "list" }     
+          left={props => <List.Icon {...props} icon={item.text? "note" : "list" } 
+          
           />}
+            
           />
         
           <Divider/>
@@ -139,8 +154,10 @@ class Home extends React.Component {
       </ScrollView>
     
 
-        <View style={styles.container}><FabComponent navigation={this.props.navigation} /></View>
-        {this.state.selected.length > 0 ? <Animatable.View animation="fadeInUp"><HomeAppBar openDatePicker={this.datePicker} /></Animatable.View>: undefined}
+        <View style={styles.container}><FabComponent navigation={this.props.navigation} />
+        
+        </View>
+        {this.state.selected.length > 0  && this.state.selected !== [] ? <HomeAppBar openDatePicker={this.datePicker} handleDelete={this.handleDelete}/>: undefined}
       </View>
 
 
@@ -175,11 +192,12 @@ const styles = StyleSheet.create({
 });
 const mapStateToProps = (state) => {
   return{
-  notes: state.notes
+  notes: state.notes,
+  selectedNote: state.selectedNote,
   }
 }
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({selectNote: selectNote}, dispatch)
+  return bindActionCreators({selectNote: selectNote, deleteNote: deleteNote}, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home)

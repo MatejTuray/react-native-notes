@@ -1,34 +1,25 @@
 import React, { Component } from 'react'
-import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, } from 'react-native'
-import PropTypes from 'prop-types'
+import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share} from 'react-native'
 import { connect } from 'react-redux';
-import {bindActionCreators} from "redux"
+import { bindActionCreators } from "redux"
 import DetailsAppBar from "./DetailsAppBar"
 import * as Animatable from 'react-native-animatable';
 import { TextInput } from 'react-native-paper';
-import { List, Checkbox, IconButton, Divider, ProgressBar} from 'react-native-paper';
+import { List, Checkbox, IconButton, Divider, ProgressBar, Snackbar } from 'react-native-paper';
 import Swipeout from 'react-native-swipeout';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
-import update from 'immutability-helper';
-let swipeoutBtnsRight = [
-  {
-    text: 'Right Button'
-  }
-]
-let swipeoutBtnsLeft = [
-  {
-    text: 'Left Button'
-  }
-]
+import { updateNote } from '../actions/notesActions';
+
+
 
 class Details extends Component {
   static navigationOptions = ({ navigation }) => {
-    const { params } = navigation.state;    
+    const { params } = navigation.state;
 
     return {
-      title: params.title ? `${params.title}`: 'Home',
+      title: params.title ? `${params.title && params.len ? params.len : params.title}` : 'Details',
       headerStyle: {
-        backgroundColor: params && params.color? `#${params.color}` : '#1a72b4',
+        backgroundColor: params && params.len > 0 && params.color ? `gray` : `${params.color}`,
       },
       headerTintColor: "white",
       headerTitleStyle: {
@@ -39,25 +30,90 @@ class Details extends Component {
   constructor(props) {
     super(props)
     this.handleCheck = this.handleCheck.bind(this)
+    this.handleSelect = this.handleSelect.bind(this)
+    this.handleUpdate = this.handleUpdate.bind(this)
+    this.handleShare = this.handleShare.bind(this)
     this.state = {
-       text: "",
-       list: []
+      text: "",
+      list: [],
+      selected: [],
+      visible: false,
     }
   }
-  componentDidMount(){
+  componentDidMount() {
+    
     this.setState({
       text: this.props.note.text,
       list: this.props.note.list
     })
   }
-  handleCheck(item){
+  handleCheck(item) {
     this.setState(prevState => ({
       list: prevState.list.map(
-      obj => (obj.text === item.text ? Object.assign(obj, { status: !obj.status }) : obj)
-    )
-     }));
+        obj => (obj.key === item.key ? Object.assign(obj, { status: !obj.status }) : obj)
+      )
+    }));
+  }
+  handleSelect(item) {
+
+    if (this.state.selected.includes(item)) {
+      this.setState({
+        selected: this.state.selected.filter(obj => obj.key !== item.key),
+      })
+    }
+    else {
+      this.setState({
+        selected: this.state.selected.concat(item),
+        change: true
+      })
+    }
+    Vibration.vibrate(50)
+ 
   }
 
+  async handleShare() {
+    // TODO BETTER SHARE!
+    try {
+      const result = await Share.share({
+        message:
+          this.props.note.title,
+      })
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+
+  handleEdit(item) {
+   
+    this.setState(prevState => ({
+      list: prevState.list.map(
+        obj => (obj.key === item.key ? Object.assign(obj, { editing: true }) : obj)
+      )
+    }))
+  }
+  handleUpdate(){
+    if (this.state.text === ""){
+    this.props.updateNote(this.state.list, this.props.note.key)
+    }
+    else{      
+
+      this.props.updateNote({text: this.state.text}, this.props.note.key)
+    }
+    this.setState({
+      redirect: true
+    })
+  }
   async datePicker() {
     let timeString
     try {
@@ -102,48 +158,98 @@ class Details extends Component {
       console.warn('Cannot open date picker', message);
     }
   }
+  
 
   render() {
+    let swipeoutBtnsRight = [
+      {
+        text: 'Right Button'
+      }
+    ]
+    let swipeoutBtnsLeft = [
+      {
+        text: 'DELETE',
+        onPress:() => { console.log("pressed")}
+      }
+    ]
     return (
       <View style={styles.viewStyle}>
-        
-      {this.props.note.text? 
-        <TextInput style={styles.textStyle}
+
+        {this.props.note.text ?
+          <TextInput 
+            theme={{ colors: {primary: this.props.note.color} }}
+            style={styles.textStyle}
             label='Note'
             value={this.state.text}
-            onChangeText={text => this.setState({ text })}
+            onChangeText={text => this.setState({ text: text })}
             mode="outlined"
             multiline={true}
             numberOfLines={12}
           />
-        :
-        <ScrollView style={styles.scrollStyle}>
-        <FlatList
-        data={this.state.list}
-        renderItem={({ item }) => (
-          <Swipeout right={swipeoutBtnsRight} left={swipeoutBtnsLeft}>
-          <List.Item
-          key={this.props.note.key * this.props.note.list.indexOf(item)} 
-          title={item.text}                                 
-          onPress={() => {console.log("short press"); this.handleCheck(item);}}
-          onLongPress={() => {console.log("long press details", item.status)}}         
-          left={props => <Checkbox.Android {...props} status={item.status ? "checked" : "unchecked"} color="green"/>}     
-          />
-          
-        
-          <Divider/>
-          </Swipeout>   
-        )}
-        />
+          :
+          <ScrollView style={styles.scrollStyle}>
+            <FlatList
+              data={this.state.list}
+              renderItem={({ item, index }) => (
+                <Swipeout right={swipeoutBtnsRight} left={swipeoutBtnsLeft}>
+                  {item.editing ? <View style={styles.inputStyle}><TextInput theme={{ colors: {primary: this.props.note.color} }} style={styles.inputStyle} onBlur={() => this.setState(prevState => ({
 
-        </ScrollView>
-      }
+                    list: prevState.list.map(
+                      obj => (obj.key === item.key ? Object.assign(obj, { editing: false }) : obj)
+                    )
+                  }))} value={item.text}
+                    onChangeText={(itemText) => this.setState(prevState => ({
+
+                      list: prevState.list.map(
+                        obj => (obj.key === item.key ? Object.assign(obj, { text: itemText }) : obj)
+                      )
+                    }))}
+
+                    onSubmitEditing={(itemText) => {
+                      console.log(this.state.newText);
+                      this.setState(prevState => ({
+
+                        list: prevState.list.map(
+                          obj => (obj.key === item.key ? Object.assign(obj, { text: item.text, editing: false }) : obj)
+                        )
+                      }))
+                    }
+                    } /></View> :
+                    <List.Item
+                      key={item.key}
+                      title={item.text}
+                      style={this.state.selected.includes(item) ? { backgroundColor: "#b2b2b2"} : { backgroundColor: "white"}}
+                      onPress={() => { this.handleCheck(item); }}
+                      onLongPress={() => { this.handleSelect(item); this.props.navigation.setParams({ len: this.state.selected.length }) }}
+                      left={props => <View style={styles.checkboxStyle}><Checkbox.Android  {...props} status={item.status ? "checked" : "unchecked"} color={this.props.note.color} /></View>}
+                      right={props => <IconButton onPress={() => this.handleEdit(item)} {...props} icon="edit" />}
+                    />
+                  }
+
+                  <Divider />
+                </Swipeout>
+              )}
+            />
+
+          </ScrollView>
+        }
         <View style={styles.snackbarStyle}>
-        <ProgressBar progress={this.state.list.filter((item) => item.status === true).length / this.state.list.length} color={`#${this.props.note.color}`} style={styles.ProgressBarStyle}/>
+          {this.state.list && !this.state.redirect ? <ProgressBar progress={this.state.list ? this.state.list.filter((item) => item.status === true).length / this.state.list.length : undefined} color={this.props.note.color} style={styles.ProgressBarStyle} /> : undefined } 
         </View>
         <View style={styles.AppBarStyle}>
-            <Animatable.View animation="bounceInLeft"><DetailsAppBar openDatePicker={this.datePicker}/></Animatable.View>
+          <Animatable.View animation="bounceInLeft"><DetailsAppBar handleShare={this.handleShare} color={this.state.selected.length > 0 ? "gray" : this.props.note.color} openDatePicker={this.datePicker} handleUpdate={() => this.handleUpdate()}></DetailsAppBar></Animatable.View>
         </View>
+        <Snackbar
+          visible={this.state.redirect}
+          onDismiss={() => {this.setState({ redirect: false }); this.props.navigation.navigate("Home")}}
+          style={styles.snackbarStyle}
+          duration={3000}          
+        
+        >       
+          Updated, returning you home...
+            
+        
+        </Snackbar>
       </View>
     )
   }
@@ -158,12 +264,13 @@ const styles = StyleSheet.create({
 
 
   },
-  ProgressBarStyle:{
+  ProgressBarStyle: {
     margin: 20,
 
   },
   inputStyle: {
-    margin: 10,
+    margin: 0,
+    backgroundColor: "white"
 
   },
   titleStyle: {
@@ -184,6 +291,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: "gray"
 
   },
   dateStyle: {
@@ -195,9 +303,7 @@ const styles = StyleSheet.create({
 
   },
   textStyle: {
-    marginTop: 10,
-    marginBottom: 10,
-    marginRight: -5,
+    margin: 10
   },
   iconStyle: {
     marginTop: 17,
@@ -216,8 +322,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
-  snackbarStyle:{
-    position: 'absolute',  
+  snackbarStyle: {
+    position: 'absolute',
     left: 0,
     right: 0,
     bottom: 55,
@@ -225,23 +331,31 @@ const styles = StyleSheet.create({
     margin: 0,
     padding: 0,
     borderRadius: 0,
-    
+
   },
   scrollStyle: {
     lineHeight: 1,
   },
+  listItemStyle: {
+    backgroundColor: "white"
+  },
+  checkboxStyle: {
+    marginTop: 5
+  }
+
 
 
 })
 
 const mapStateToProps = (state) => {
-  return{
-  note: state.selectedNote
+  return {
+    note: state.selectedNote,
+    notes: state.notes
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({})
+  return bindActionCreators({updateNote: updateNote}, dispatch)
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Details)

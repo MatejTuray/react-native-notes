@@ -17,10 +17,10 @@ export default class MyComponent extends React.Component {
           actions={[
             { icon: 'note-add', label: "Create a note", style: {
               backgroundColor: "#aa6a39",
-            }, onPress: () => this.props.navigation.push("CreateNote") },
+            }, onPress: () => this.props.navigation.navigate("CreateNote", {edit: false, titleText: "Untitled note"}) },
             { icon: 'playlist-add', label: 'Create a list', style: {
               backgroundColor: "#aa6a39",
-            }, onPress: () => this.props.navigation.push("CreateShoppingList")},
+            }, onPress: () => this.props.navigation.navigate("CreateShoppingList", {edit: false, titleText: "Untitled list"})},
             { icon: 'email', label: 'Email', style: {
               backgroundColor: "#aa6a39",
             },onPress: () => console.log('Pressed email') },

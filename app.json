@@ -1,14 +1,17 @@
 {
   "expo": {
-    "name": "weather",
+    "name": "notes",
     "description": "This project is really great.",
-    "slug": "weather",
+    "slug": "notes",
     "privacy": "public",
     "sdkVersion": "31.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": ["android"],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "androidStatusBar": {
+      "backgroundColor": "#4e2ba1" 
+   },
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -22,6 +25,12 @@
     ],
     "ios": {
       "supportsTablet": true
-    }
+    },
+    "android":{
+    "permissions": [
+      "VIBRATE",
+      "NOTIFICATIONS"
+    ]
+  }
   }
 }

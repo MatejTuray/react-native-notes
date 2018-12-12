@@ -6,26 +6,40 @@ import { bindActionCreators } from "redux"
 import { saveNote } from "../actions/notesActions"
 import moment from "moment"
 import AppBar from "./AppBar";
-import { List, IconButton, Switch, Text, Snackbar, Portal } from 'react-native-paper';
+import { List, IconButton, Switch, Snackbar, Modal, Portal, TouchableRipple } from 'react-native-paper';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import { ColorWheel } from 'react-native-color-wheel';
+import { TriangleColorPicker } from 'react-native-color-picker'
+import { Notifications } from "expo";
+import { MaterialHeaderButtons, Item } from './HeaderButtons'
+import EditableHeader from './EditableHeader';
+
+
 const convert = require('color-convert');
-const uuidv1 = require('uuid/v1')
+const uuidv4 = require('uuid/v4')
 
 class CreateNote extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
-    console.log(params)
+
 
     return {
-      title: 'Create a note',
+      title: params.titleText ? `${params.titleText}` : undefined,
       headerStyle: {
-        backgroundColor: params && params.color? `#${params.color}` : '#1a72b4',
+        backgroundColor: params && params.color ? `${params.color}` : '#1a72b4',
       },
       headerTintColor: "white",
       headerTitleStyle: {
         color: "white"
-      }
+      },
+      headerLeft: params && params.edit ? (
+        <EditableHeader color={params.color} titleText={params.titleText} setHeader={() => params.setHeader()} />) : (undefined
+        ),
+      headerRight: (
+        <MaterialHeaderButtons>
+          {params && params.edit === false ? <Item title="edit" iconName="edit" onPress={() => params.editHeader()} /> : undefined}
+
+        </MaterialHeaderButtons>
+      )
     }
   };
   constructor(props) {
@@ -33,7 +47,9 @@ class CreateNote extends Component {
     this.handleSaveNote = this.handleSaveNote.bind(this)
     this.datePicker = this.datePicker.bind(this)
     this._handleDatePicked = this._handleDatePicked.bind(this)
-    this._hideDateTimePicker = this._hideDateTimePicker.bind(this)    
+    this._hideDateTimePicker = this._hideDateTimePicker.bind(this)
+    this.editHeader = this.editHeader.bind(this)
+    this.handleSetHeader = this.handleSetHeader.bind(this)
 
     this.state = {
       text: "",
@@ -41,26 +57,73 @@ class CreateNote extends Component {
       snackBarVisible: false,
       remind: false,
       reminderDate: "",
+      editHeader: false,
+      color: "#1a72b4",
 
     }
   }
+  componentWillMount() {
+    this.props.navigation.setParams({ editHeader: this.editHeader, setHeader: this.handleSetHeader });
+
+  }
+  editHeader() {
+    let edit = this.props.navigation.state.params.edit
+
+    this.props.navigation.setParams({ edit: !edit })
+  }
+  componentDidUpdate(prevProps) {
+    console.log(prevProps.title, this.props.title)
+    if (prevProps.title !== this.props.title) {
+      this.props.navigation.setParams({ titleText: this.props.title })
+    }
+
+  }
+
+
+  handleSetHeader() {
+    this.props.navigation.setParams({ edit: false })
+  }
   handleSaveNote() {
-    
-    let payload = {
-        key: uuidv1(),
-        date: this.state.date,
+    if (this.state.remind === true) {
+      console.log("scheduling notification")
+      //TODO DESIGN NOTIF
+      const localNotification = {
         title: this.state.title,
-        text: this.state.text,
-        remind: this.state.remind,
-        reminderDate: this.state.reminderDate,
-        color: this.state.color
+        body: this.state.text, // (string) — body text of the notification.       
+        android: // (optional) (object) — notification configuration specific to Android.
+        {
+          sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
+          //icon (optional) (string) — URL of icon to display in notification drawer.
+          //color (optional) (string) — color of the notification icon in notification drawer.
+          priority: 'high', // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+          sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+          vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+        }
+      }
+
+      const schedulingOptions = {
+        time: Date.parse(this.state.reminderDate)
+      }
+
+
+      Notifications.scheduleLocalNotificationAsync(localNotification, schedulingOptions)
+
+    }
+    let payload = {
+      key: uuidv4(),
+      date: this.state.date,
+      title: this.props.title,
+      text: this.state.text,
+      remind: this.state.remind,
+      reminderDate: this.state.reminderDate,
+      color: this.state.color
     }
     console.log(payload)
     this.setState({
       redirect: true
     })
     this.props.saveNote(payload)
-  } 
+  }
 
   _hideDateTimePicker = () => this.setState({ openDateTime: false, remind: false });
 
@@ -69,11 +132,12 @@ class CreateNote extends Component {
     this._hideDateTimePicker();
     this.setState({
       snackBarVisible: true,
-      reminderDate: date, 
+      reminderDate: date,
       remind: true,
     })
   }
-
+  _showModal = () => this.setState({ visible: true });
+  _hideModal = () => this.setState({ visible: false });
 
   async datePicker() {
     let timeString
@@ -148,29 +212,22 @@ class CreateNote extends Component {
               color={this.state.remind ? "green" : "black"}
               icon="notifications"
               size={20}
-              onPress={() => this.setState({remind: true, openDateTime: true})}
+              onPress={() => this.setState({ remind: true, openDateTime: true })}
             />
 
             <Switch
               value={this.state.remind}
-              color="#1a72b4"
-              onValueChange={() => { this.setState({ remind: !this.state.remind, openDateTime: true}  ); }
+              color={this.state.color}
+              onValueChange={() => { this.setState({ remind: !this.state.remind, openDateTime: true }); }
               }
             />
           </View>
         </View>
 
         <View style={styles.inputStyle}>
-          <TextInput
-            style={styles.titleStyle}
-            label='Note title'
-            value={this.state.title}
-            onChangeText={title => this.setState({ title })}
-            mode="outlined"
-
-          />
 
           <TextInput
+            theme={{ colors: { primary: this.state.color } }}
             label='Note'
             value={this.state.text}
             onChangeText={text => this.setState({ text })}
@@ -180,15 +237,9 @@ class CreateNote extends Component {
           />
 
         </View>
-        <ColorWheel
-          initialColor="#ee0000"
-          onColorChange={(color) => {let clr = convert.hsv.hex(color.h, color.s, color.v); console.log(clr); this.props.navigation.setParams({color: clr}); this.setState({
-            color: clr
-          })}}
-          style={{width: Dimensions.get('window').width}}
-          thumbStyle={{ height: 15, width: 15, borderRadius: 30}} />
+
         <View style={styles.AppBarStyle}>
-          <AppBar openDatePicker={this.datePicker} handleSaveNote={this.handleSaveNote} color={this.state.color} />
+          <AppBar openDatePicker={this.datePicker} handleSaveNote={this.handleSaveNote} color={this.state.color} openModal={this._showModal} />
         </View>
         <DateTimePicker
           isVisible={this.state.remind && this.state.openDateTime}
@@ -196,30 +247,51 @@ class CreateNote extends Component {
           onCancel={this._hideDateTimePicker}
           mode="datetime"
         />
-      
+
         <Snackbar
           visible={this.state.snackBarVisible}
           onDismiss={() => this.setState({ snackBarVisible: false })}
           style={styles.snackbarStyle}
-          duration={5000}          
-        
-        >       
+          duration={5000}
+
+        >
           Reminder: {moment(this.state.reminderDate).format("DD/MM/YYYY HH:mm")}
-            
-        
+
+
         </Snackbar>
         <Snackbar
           visible={this.state.redirect}
-          onDismiss={() => {this.setState({ redirect: false }); this.props.navigation.navigate("Home")}}
+          onDismiss={() => { this.setState({ redirect: false }); this.props.navigation.navigate("Home") }}
           style={styles.snackbarStyle}
-          duration={3000}          
-        
-        >       
+          duration={3000}
+
+        >
           Note saved...
-            
-        
+
+
         </Snackbar>
-     
+        <Portal>
+          <Modal style={{
+            alignItems: 'center', flex: 1,
+            justifyContent: 'center'
+          }} visible={this.state.visible} onDismiss={this._hideModal}>
+
+            <View style={{ height: Dimensions.get("window").height / 2 }}>
+              <TriangleColorPicker
+                style={{ flex: 1, }}
+                oldColor={this.state.color}
+                onColorSelected={(color) => {
+                  console.log(color);
+                  this.props.navigation.setParams({ color: color }); this.setState({
+                    color: color
+                  });
+                  this._hideModal()
+                }} />
+            </View>
+
+
+          </Modal>
+        </Portal>
       </View>
 
 
@@ -251,7 +323,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     display: "flex",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+
   },
   AppBarStyle: {
     position: 'absolute',
@@ -260,6 +337,7 @@ const styles = StyleSheet.create({
     bottom: 0,
 
   },
+
   dateStyle: {
     marginTop: 17.5,
     margin: 10,
@@ -290,8 +368,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
-  snackbarStyle:{
-    position: 'absolute',  
+  snackbarStyle: {
+    position: 'absolute',
     left: 0,
     right: 0,
     bottom: 55,
@@ -299,14 +377,18 @@ const styles = StyleSheet.create({
     margin: 0,
     padding: 0,
     borderRadius: 0,
-    
+
   }
 
 
 })
+const mapStateToProps = (state) => ({
+  title: state.title
+})
+
 
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({ saveNote: saveNote }, dispatch)
 }
 
-export default connect(null, mapDispatchToProps)(CreateNote)
+export default connect(mapStateToProps, mapDispatchToProps)(CreateNote)
