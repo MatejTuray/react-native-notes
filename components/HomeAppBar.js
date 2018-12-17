@@ -14,11 +14,10 @@ export default class HomeAppBar extends React.Component {
   render() {
     return (
        
-      <Appbar style={styles.bottom}>
-     <Appbar.Action icon="date-range" color="white" onPress={() => this.props.openDatePicker()}/>
-        <Appbar.Action  color="white" icon={this.state.list ? "view-list" : "view-module"} onPress={() => {console.log('Pressed switch view'); this.setState({list: !this.state.list})}} />
+      <Appbar style={styles.bottom}>             
         <Appbar.Action  color="white" icon="share" onPress={() => console.log('Pressed mail')} />   
-        <Appbar.Action  color="white" icon="delete" onPress={() => {this.props.handleDelete()}} />   
+        <Appbar.Action  color="white" icon="delete" onPress={() => {this.props.handleDelete()}} /> 
+        <Appbar.Action  color="white" icon="archive" onPress={() => {this.props.handleArchive()}} /> 
       </Appbar>
       
     );

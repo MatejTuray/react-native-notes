@@ -5,7 +5,7 @@ import { bindActionCreators } from "redux"
 import DetailsAppBar from "./DetailsAppBar"
 import * as Animatable from 'react-native-animatable';
 import { TextInput } from 'react-native-paper';
-import { List, Checkbox, IconButton, Divider, ProgressBar, Snackbar } from 'react-native-paper';
+import { List, Checkbox, IconButton, Divider, ProgressBar, Snackbar, Chip } from 'react-native-paper';
 import Swipeout from 'react-native-swipeout';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { updateNote } from '../actions/notesActions';
@@ -217,12 +217,12 @@ class Details extends Component {
                     } /></View> :
                     <List.Item
                       key={item.key}
-                      title={item.text}
+                      title={`${item.text} - ${(item.value * item.price).toString()} `}
                       style={this.state.selected.includes(item) ? { backgroundColor: "#b2b2b2"} : { backgroundColor: "white"}}
                       onPress={() => { this.handleCheck(item); }}
                       onLongPress={() => { this.handleSelect(item); this.props.navigation.setParams({ len: this.state.selected.length }) }}
                       left={props => <View style={styles.checkboxStyle}><Checkbox.Android  {...props} status={item.status ? "checked" : "unchecked"} color={this.props.note.color} /></View>}
-                      right={props => <IconButton onPress={() => this.handleEdit(item)} {...props} icon="edit" />}
+                      right={props => <View {...props}><IconButton style={{marginRight: 5}} onPress={() => this.handleEdit(item)} {...props} icon="edit" /></View>}
                     />
                   }
 

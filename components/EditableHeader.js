@@ -28,7 +28,7 @@ class EditableHeader extends Component {
       <View style={styles.viewStyle}>
            <TextInput 
             theme={{ colors: { primary: this.props.color, } }}                    
-            label='Note title'
+            label='Title'
             style={styles.inputStyle}
             value={this.state.title}
             onChangeText={title => this.setState({title:title})}

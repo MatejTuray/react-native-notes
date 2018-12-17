@@ -8,9 +8,11 @@ import { Bars } from 'react-native-loader';
 import {View, Alert} from "react-native"
 import { Notifications } from "expo";
 import {StatusBar} from 'react-native';
+
 export default class App extends React.Component {
 
   componentDidMount(){
+    
     Notifications.addListener((notif) => {
       console.log(notif)
       Alert.alert(
@@ -32,7 +34,8 @@ export default class App extends React.Component {
       <PaperProvider>
                 <View style={{flex: 1}}> 
                 <StatusBar  translucent backgroundColor="rgba(0,0,0,0.2)"/>
-                <AppContainer />   
+                <AppContainer />
+                
                 </View>  
       </PaperProvider>
       </PersistGate>

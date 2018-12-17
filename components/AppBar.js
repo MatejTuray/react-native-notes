@@ -13,8 +13,7 @@ export default class AppBar extends React.Component {
   render() {
     return (
        
-      <Appbar style={this.props.color? {backgroundColor: `${this.props.color}`} : {backgroundColor:"#1a72b4"}}>
-        <Appbar.Action color="white" icon="save" onPress={() => this.props.handleSaveNote()} />
+      <Appbar style={this.props.color? {backgroundColor: `${this.props.color}`} : {backgroundColor:"#1a72b4"}}>        
         <Appbar.Action  color="white"icon="color-lens" onPress={() => this.props.openModal()} />
         <Appbar.Action color="white" icon={this.state.voice ? "mic-off" : "mic"} onPress={() => {this.setState({
             voice: !this.state.voice

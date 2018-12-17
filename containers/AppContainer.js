@@ -1,10 +1,11 @@
 import React, { Component } from 'react'
 import Home from "../components/Home"
 import Details from "../components/Details"
-import { createStackNavigator, createAppContainer } from "react-navigation";
+import { createStackNavigator, createAppContainer, createBottomTabNavigator } from "react-navigation";
 import CreateNote from '../components/CreateNote';
 import CreateShoppingList from "../components/CreateShoppingList";
 import {connect} from "react-redux"
+
 
 const RootStack = createStackNavigator(
   {
@@ -12,6 +13,7 @@ const RootStack = createStackNavigator(
       
      
     } },
+   
     CreateNote: {screen: CreateNote, navigationOptions: {
      
   }},

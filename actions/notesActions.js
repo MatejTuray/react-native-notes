@@ -32,5 +32,19 @@ const setTitle = (title) => {
         payload: title
     }
 }
+const toggleFavorites = (status, key) => {
+    return {
+        type: "TOGGLE_FAVORITES",
+        payload: status,
+        key: key
+    }
+}
+const setArchive = (status, key) => {
+    return {
+        type: "ARCHIVE_NOTE",
+        payload: status,
+        key: key
+    }
+}
 
-export {saveNote, selectNote, updateNote, deleteNote, setTitle}
+export {saveNote, selectNote, updateNote, deleteNote, setTitle, toggleFavorites, setArchive}
