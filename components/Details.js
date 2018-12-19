@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share} from 'react-native'
+import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share, NetInfo} from 'react-native'
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux"
 import DetailsAppBar from "./DetailsAppBar"
@@ -9,8 +9,10 @@ import { List, Checkbox, IconButton, Divider, ProgressBar, Snackbar, Chip } from
 import Swipeout from 'react-native-swipeout';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import { updateNote } from '../actions/notesActions';
-
-
+import { MaterialHeaderButtons, Item } from "./HeaderButtons";
+import {Linking} from "expo"
+import axios from "axios"
+import Spinner from 'react-native-loading-spinner-overlay';
 
 class Details extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -24,7 +26,12 @@ class Details extends Component {
       headerTintColor: "white",
       headerTitleStyle: {
         color: "white"
-      }
+      },
+      headerRight: (
+        <MaterialHeaderButtons>         
+          <Item title="UPDATE" iconName="" onPress={() => params.handleUpdate()} />
+        </MaterialHeaderButtons>
+      )
     }
   };
   constructor(props) {
@@ -38,14 +45,40 @@ class Details extends Component {
       list: [],
       selected: [],
       visible: false,
+      loading: false,
     }
   }
+  componentWillMount() {
+    this.props.navigation.setParams({     
+      handleUpdate: this.handleUpdate
+    });
+  }
   componentDidMount() {
-    
+    console.log(this.props.note)
     this.setState({
       text: this.props.note.text,
       list: this.props.note.list
     })
+    NetInfo.getConnectionInfo().then((connectionInfo) => {
+      console.log('Initial, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType);
+      this.setState({
+        connection: connectionInfo.type 
+      })
+    });
+    function handleFirstConnectivityChange(connectionInfo) {
+      console.log('First change, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType);
+      this.setState({
+        connection: connectionInfo.type 
+      })
+      NetInfo.removeEventListener(
+        'connectionChange',
+        handleFirstConnectivityChange
+      );
+    }
+    NetInfo.addEventListener(
+      'connectionChange',
+      handleFirstConnectivityChange
+    );
   }
   handleCheck(item) {
     this.setState(prevState => ({
@@ -72,21 +105,68 @@ class Details extends Component {
   }
 
   async handleShare() {
-    // TODO BETTER SHARE!
+    // TODO LINKS WORK BASIC
     try {
-      const result = await Share.share({
-        message:
-          this.props.note.title,
-      })
-
+      if(this.state.connection !== "none" && this.state.connection !== "unknown"){
+      let link = Linking.makeUrl("",{key: this.props.note.key})
+      console.log(link)
+      this.setState({
+        loading: true
+      })      
+      if(this.props.note.text && this.props.note.text !== ""){
+      axios.post("http://192.168.1.103:5000/api/note", {
+        key: this.props.note.key,
+        title: this.props.note.title,
+        text: this.props.note.text,
+        date: this.props.note.date,
+        remind: this.props.note.remind,
+        reminderDate: this.props.note.reminderDate,
+        color: this.props.note.color,
+      }).then((res) => {console.log(res);     
+        this.setState({
+          loading: false
+        })
+      }
+      ).catch((e) => console.log(e))
+       if (this.state.loading === false){
+        let result = await Share.share({
+          title: this.props.note.title,
+          message: link
+        })
+       }
+    }
+    else {
+      axios.post("http://192.168.1.103:5000/api/list", {
+        key: this.props.note.key,
+        title: this.props.note.title,
+        list: this.props.note.list,
+        date: this.props.note.date,
+        remind: this.props.note.remind,
+        reminderDate: this.props.note.reminderDate,
+        color: this.props.note.color,
+        totalPrice: this.props.note.totalPrice
+      }).then((res) => {console.log(res);     
+        this.setState({
+          loading: false
+        })
+      }
+      ).catch((e) => console.log(e))
+       if (this.state.loading === false){
+        let result = await Share.share({
+          title: this.props.note.title,
+          message: link
+        })
+       }
+    }
+    }
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
-          // shared with activity type of result.activityType
+          console.log("shared with", result.activityType)
         } else {
-          // shared
+          console.log("shared")
         }
       } else if (result.action === Share.dismissedAction) {
-        // dismissed
+        console.log("dismissed")
       }
     } catch (error) {
       alert(error.message);
@@ -174,7 +254,11 @@ class Details extends Component {
     ]
     return (
       <View style={styles.viewStyle}>
-
+        <Spinner
+        visible={this.state.loading}
+        textContent={"Preparing to share..."}
+        textStyle={{color: "white"}}
+        />
         {this.props.note.text ?
           <TextInput 
             theme={{ colors: {primary: this.props.note.color} }}
@@ -234,10 +318,10 @@ class Details extends Component {
           </ScrollView>
         }
         <View style={styles.snackbarStyle}>
-          {this.state.list && !this.state.redirect ? <ProgressBar progress={this.state.list ? this.state.list.filter((item) => item.status === true).length / this.state.list.length : undefined} color={this.props.note.color} style={styles.ProgressBarStyle} /> : undefined } 
+          {this.state.list && !this.state.redirect && this.props.note.text === "" ? <ProgressBar progress={this.state.list ? this.state.list.filter((item) => item.status === true).length / this.state.list.length : undefined} color={this.props.note.color} style={styles.ProgressBarStyle} /> : undefined } 
         </View>
         <View style={styles.AppBarStyle}>
-          <Animatable.View animation="bounceInLeft"><DetailsAppBar handleShare={this.handleShare} color={this.state.selected.length > 0 ? "gray" : this.props.note.color} openDatePicker={this.datePicker} handleUpdate={() => this.handleUpdate()}></DetailsAppBar></Animatable.View>
+          <Animatable.View animation="bounceInLeft"><DetailsAppBar totalPrice={this.props.note.totalPrice} handleShare={this.handleShare} color={this.state.selected.length > 0 ? "gray" : this.props.note.color} openDatePicker={this.datePicker} handleUpdate={() => this.handleUpdate()}></DetailsAppBar></Animatable.View>
         </View>
         <Snackbar
           visible={this.state.redirect}
@@ -250,6 +334,7 @@ class Details extends Component {
             
         
         </Snackbar>
+        
       </View>
     )
   }
@@ -335,6 +420,7 @@ const styles = StyleSheet.create({
   },
   scrollStyle: {
     lineHeight: 1,
+    marginBottom: 55,
   },
   listItemStyle: {
     backgroundColor: "white"

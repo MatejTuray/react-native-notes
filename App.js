@@ -4,33 +4,53 @@ import AppContainer from "./containers/AppContainer"
 import {Provider} from "react-redux"
 import { PersistGate } from 'redux-persist/integration/react'
 import {store, persistor} from "./configStore"
-import { Bars } from 'react-native-loader';
-import {View, Alert} from "react-native"
-import { Notifications } from "expo";
+import SplashScreen from "./components/SplashScreen";
+import {View, Alert, Platform} from "react-native"
+import { Notifications, Linking } from "expo";
 import {StatusBar} from 'react-native';
+import {ActionCreators} from "redux-undo"
+import axios from "axios"
 
 export default class App extends React.Component {
+  constructor(props) {
+    super(props)
+  
+    this.state = {
+       
+    }
+  }
+  
 
   componentDidMount(){
-    
+    if (Platform.OS === 'android') {
+      Expo.Notifications.createChannelAndroidAsync('reminders', {
+        name: 'Reminders',
+        description: "scheduled reminders notes app",
+        priority: 'max',
+        sound: true,
+        vibrate: [0, 250, 250, 250],
+        badge: true
+      });
+    }
+  
+  
     Notifications.addListener((notif) => {
       console.log(notif)
-      Alert.alert(
-        'Notification Recieved!',
-        'Msg',
-        [
-          {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
-          {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-          {text: 'OK', onPress: () => console.log('OK Pressed')},
-        ],
-        { cancelable: false }
-      )
+      console.log(notif.data)
+      
     })
+  }
+   
+    
+  
+  componentWillUnmount(){
+    store.dispatch(ActionCreators.clearHistory())
+    console.log("clearing history")
   }
   render() {
         return (
       <Provider store={store}>
-        <PersistGate loading={<View><Bars size={10} color="#FDAAFF" /></View>} persistor={persistor}>
+        <PersistGate loading={<SplashScreen/>} persistor={persistor}>
       <PaperProvider>
                 <View style={{flex: 1}}> 
                 <StatusBar  translucent backgroundColor="rgba(0,0,0,0.2)"/>

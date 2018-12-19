@@ -4,7 +4,7 @@ import { Text, IconButton,  } from "react-native-paper";
 import moment from "moment";
 import FabComponent from "./FabComponent";
 import HomeAppBar from "./HomeAppBar";
-import { DatePickerAndroid, TouchableOpacity, SafeAreaView, Alert, Button} from "react-native";
+import { DatePickerAndroid, TouchableOpacity, SafeAreaView, Alert, Button, NetInfo} from "react-native";
 import { Searchbar, List, Divider, Snackbar } from "react-native-paper";
 import { connect } from "react-redux";
 import { FlatList, ScrollView } from "react-native-gesture-handler";
@@ -13,7 +13,8 @@ import {
   selectNote,
   deleteNote,
   toggleFavorites,
-  setArchive
+  setArchive,
+  saveNote
 } from "../actions/notesActions";
 import { bindActionCreators } from "redux";
 import MaterialTabs from 'react-native-material-tabs';
@@ -23,6 +24,9 @@ import {rootSelector, getVisibleNotes, getVisibleNotesWithTextQuery} from "../se
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { ActionCreators } from 'redux-undo';
 import { store } from "../configStore";
+import { Notifications, Linking } from "expo";
+import axios from "axios"
+import Spinner from 'react-native-loading-spinner-overlay';
 const uuidv4 = require("uuid/v4");
 
 class Home extends React.Component {
@@ -45,7 +49,7 @@ class Home extends React.Component {
           
           <Item key={uuidv4()} title="date-range" iconName="date-range" onPress={() => params.datePicker()} />
           <Item key={uuidv4()}  title="view-module" iconName={"view-module"} onPress={() => {console.log('Pressed switch view');}} />
-          
+         
         </MaterialHeaderButtons>
         
       )
@@ -61,6 +65,7 @@ class Home extends React.Component {
     this.handleArchive = this.handleArchive.bind(this);
     this.setTab = this.setTab.bind(this)
     this.onSwipe = this.onSwipe.bind(this)
+    
     this.state = {
       text: "",
       title: "",
@@ -69,7 +74,8 @@ class Home extends React.Component {
       selectedTab: 0,
       list: true,
       gestureName: 'none',
-     
+      fetching: false,
+      
     };
   }
   componentWillMount(){
@@ -79,19 +85,102 @@ class Home extends React.Component {
     this.props.setFilter(this.state.selectedTab)
   }
   componentDidMount(){
-    
+    store.dispatch(ActionCreators.clearHistory())
+    console.log(this.props)
+    NetInfo.getConnectionInfo().then((connectionInfo) => {
+      console.log('Initial, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType);
+      this.setState({
+        connection: connectionInfo.type 
+      })
+    });
+    function handleFirstConnectivityChange(connectionInfo) {
+      console.log('First change, type: ' + connectionInfo.type + ', effectiveType: ' + connectionInfo.effectiveType);
+      this.setState({
+        connection: connectionInfo.type 
+      })
+      NetInfo.removeEventListener(
+        'connectionChange',
+        handleFirstConnectivityChange
+      );
+    }
+    NetInfo.addEventListener(
+      'connectionChange',
+      handleFirstConnectivityChange
+    );
+  
     this.props.navigation.setParams({
       date: this.state.date,     
     })
+    Notifications.addListener((notif) => {   
+      console.log(notif.notificationId)
+      if(notif.data.key && notif.data.title && notif.data.color){
+        let item = this.props.notes.present.find(item => item.key === notif.data.key)        
+        this.props.selectNote(item)
+      this.props.navigation.navigate(`Details`, {id: item.key,  title: item.title,
+      color: item.color,})
+      Notifications.dismissNotificationAsync(notif.notificationId)
+      }
+    })
+    
+    Linking.addEventListener('url', (url) => {
+      this._handleUrl(url)
+    })
+    Linking.getInitialURL().then((res) => res !== null ? this._handleUrl(res) : console.log(res)).catch(e => console.log(e))
+
   }
+  _handleUrl = url => { 
+    this.setState({
+      fetching: true
+    }) 
+    let parsed = url
+    let key
+    if (parsed){
+      console.log(parsed) 
+      try{
+      key = parsed.match(/key=([^&]*)/)[1]
+      }
+      catch(e){
+        console.log(e)
+      }
+      
+    }
+    console.log(key)
+    try{
+      if(key !== undefined && (this.state.connection !== "none" && this.state.connection !== "unknown")){
+    axios.get(`http://192.168.1.103:5000/api/items/${key}`).then((res) => {
+        console.log(res.data);
+        this.setState({
+          itemData: res.data
+        })
+        if(this.props.notes.present.find((item) => item.key === this.state.itemData.key)){
+          Alert.alert("This item is already saved", `${this.state.itemData.title} @ ${moment(this.state.itemData.date).format("DD/MM/YYYY HH:mm")}`)
+          this.setState({
+            fetching:false
+          })      }
+        else{
+          this.props.saveNote(this.state.itemData)
+          Alert.alert("Saved", `${this.state.itemData.title} has been saved successfuly`)
+          axios.delete(`http://192.168.1.103:5000/api/items/${key}`).then((res) => {
+            console.log(res)
+          }).catch(e => console.log(e))
+          this.setState({
+            fetching: false
+          })
+        }
+      }).catch((e) => Alert.alert("Invalid link", "This shareable link is no longer valid, please request a new one from note creator" ))
+    } 
+  }
+    catch(e){
+      console.log(e)
+    }
+  
+  };
   
   setTab = selectedTab => {
     this.setState({ selectedTab });
     this.props.setFilter(selectedTab)
   };
-  onSwipeRight(gestureState){
-
-  }
+ 
   onSwipe(gestureName, gestureState) {
     const {SWIPE_UP, SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
     this.setState({gestureName: gestureName});
@@ -148,9 +237,13 @@ class Home extends React.Component {
     Vibration.vibrate(50);
   }
   handleDelete() {
-    for (let elem of this.state.selected) {
-      this.props.deleteNote(elem);
-    }
+    this.setState({
+      undoable: this.state.selected
+    })
+    for (let elem of this.state.selected){
+    this.props.deleteNote(elem)
+    };
+   
     let items = this.state.selected.length
     this.setState({
       selected: [],
@@ -160,6 +253,7 @@ class Home extends React.Component {
     this.props.navigation.setParams({ len: 0 });
   }
   handleArchive(){
+    
     for (let elem of this.state.selected) {
       
       if(this.props.notes.present.find(item => item.key === elem.key && item.archive === false) && this.state.selectedTab === 0 || this.state.selectedTab === 2){
@@ -190,8 +284,8 @@ class Home extends React.Component {
   async datePicker() {
     try {
       const { action, year, month, day } = await DatePickerAndroid.open({
-        date: this.state.date,
-        minDate: new Date()
+        date: new Date(),
+        
       });
 
       if (action === DatePickerAndroid.dateSetAction) {
@@ -258,6 +352,11 @@ class Home extends React.Component {
     return (
       
       <View style={styles.container}>
+      <Spinner
+        visible={this.state.loading}
+        textContent={"Fetching items..."}
+        textStyle={{color: "white"}}
+        />
       <GestureRecognizer
         onSwipe={(direction, state) => this.onSwipe(direction, state)}
         style={{
@@ -271,7 +370,7 @@ class Home extends React.Component {
           selectedIndex={this.state.selectedTab}
           onChange={this.setTab}
           barColor={this.state.selected.length > 0 && this.state.selected !== [] ? "grey" : "#1a72b4" }
-          indicatorColor="#1a72b4"
+          indicatorColor="white"
           activeTextColor="white"
         />
       </SafeAreaView>
@@ -291,7 +390,7 @@ class Home extends React.Component {
           {/* <Text style={styles.textStyle}>Your notes for {moment(this.state.date).format("LL")} </Text> */}
         </View>
 
-        <ScrollView>
+        <ScrollView style={styles.scrollStyle}>
           <FlatList
             data={this.state.firstQuery !== "" ? this.props.search : this.props.reselect}
             renderItem={({ item }) => (
@@ -319,7 +418,8 @@ class Home extends React.Component {
                     this.props.selectNote(item);
                     this.props.navigation.navigate("Details", {
                       title: item.title,
-                      color: item.color
+                      color: item.color,
+                      id: item.key,
                     });
                   }}
                   onLongPress={() => {
@@ -382,14 +482,8 @@ class Home extends React.Component {
           visible={this.state.openArchiveSnack}
           onDismiss={() => {
             this.setState({ openArchiveSnack: false });            
-          }}
-          action={{
-            label: 'Undo',
-            onPress: () => {
-              store.dispatch(ActionCreators.undo())
-            },
-          }}
-          duration={3000}
+          }}        
+          duration={2000}
         >
           {this.state.selectedTab !== 2 ? `Archived ${this.state.items} ${this.state.items === 1 ? "item" : "items"}` : `Removed ${this.state.items} ${this.state.items === 1 ? "item" : "items"} from archive`}
         </Snackbar>
@@ -402,11 +496,17 @@ class Home extends React.Component {
           action={{
             label: 'Undo',
             onPress: () => {
+              for (let elem of this.state.undoable){
               store.dispatch(ActionCreators.undo())
+              this.setState({
+                undoable: this.state.undoable.filter((item) => item.key !== elem.key)
+              })
+              
+              }
             },
           }}
           
-          duration={3000}
+          duration={5000}
         >
           {`Deleted ${this.state.items} ${this.state.items === 1 ? "item" : "items"}` }
         </Snackbar>
@@ -448,6 +548,9 @@ const styles = StyleSheet.create({
     marginTop: 55,
     paddingTop: 15
   },
+  scrollStyle: {
+    lineHeight: 1,    
+  },
   headerStyle: {
     display: "flex",
     justifyContent: "center"
@@ -483,6 +586,7 @@ const mapDispatchToProps = dispatch => {
       setArchive: setArchive,
       setFilter: setFilter,
       setQuery: setQuery,
+      saveNote: saveNote,
 
     },
     dispatch

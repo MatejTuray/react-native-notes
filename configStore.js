@@ -9,15 +9,15 @@ const persistConfig = {
     key: 'root',
     storage,        
     stateReconciler: hardSet,
-    blacklist: ["query", "list",]
+    blacklist: ["query", "list", "selectedNote"]
   }
   
   
   const persistedReducer = persistReducer(persistConfig,rootReducer)
   
 
-    let store = createStore(persistedReducer, applyMiddleware(logger))
+    let store = createStore(persistedReducer)
     let persistor = persistStore(store)
-    
+    // persistor.purge().then((res) => console.log(res))
     
 export {store, persistor}

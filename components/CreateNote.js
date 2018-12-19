@@ -26,6 +26,8 @@ import { TriangleColorPicker } from "react-native-color-picker";
 import { Notifications } from "expo";
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import EditableHeader from "./EditableHeader";
+import {Linking} from "expo"
+
 
 const convert = require("color-convert");
 const uuidv4 = require("uuid/v4");
@@ -94,6 +96,9 @@ class CreateNote extends Component {
       setHeader: this.handleSetHeader,
       saveNote: this.handleSaveNote
     });
+    this.setState({
+      key: uuidv4()
+    })
   }
   editHeader() {
     let edit = this.props.navigation.state.params.edit;
@@ -111,18 +116,22 @@ class CreateNote extends Component {
     this.props.navigation.setParams({ edit: false });
   }
   handleSaveNote() {
+    
     if (this.state.remind === true) {
+      
       console.log("scheduling notification");
       //TODO DESIGN NOTIF
       const localNotification = {
-        title: this.state.title,
-        body: this.state.text, // (string) — body text of the notification.
-        // (optional) (object) — notification configuration specific to Android.
+        title: this.props.title,
+        body: `Reminder for your note - ${moment(this.state.date).format("DD/MM/YYYY, time: HH/mm")}`, // (string) — body text of the notification.
+        data: {key: this.state.key, color: this.state.color, title: this.props.title},
+         // (optional) (object) — notification configuration specific to Android.
         android: {
+          channelId: "reminders",
           sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
           //icon (optional) (string) — URL of icon to display in notification drawer.
-          //color (optional) (string) — color of the notification icon in notification drawer.
-          priority: "high", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+          color: this.state.color, // (optional) (string) — color of the notification icon in notification drawer.
+          priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
           sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
           vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
         }
@@ -138,7 +147,7 @@ class CreateNote extends Component {
       );
     }
     let payload = {
-      key: uuidv4(),
+      key: this.state.key,
       date: Date.parse(this.state.date),
       title: this.props.title,
       text: this.state.text,
@@ -153,7 +162,9 @@ class CreateNote extends Component {
       redirect: true
     });
     if(payload.title !== "" && payload.text !== ""){
-    this.props.saveNote(payload)}
+    this.props.saveNote(payload)
+    
+      }
   }
 
   _hideDateTimePicker = () =>

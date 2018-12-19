@@ -9,18 +9,18 @@ import {connect} from "react-redux"
 
 const RootStack = createStackNavigator(
   {
-    Home: {screen: Home, navigationOptions: {      
+    Home: {screen: Home, path:"home/", navigationOptions: {      
       
      
     } },
    
-    CreateNote: {screen: CreateNote, navigationOptions: {
+    CreateNote: {screen: CreateNote, path:"createnote/", navigationOptions: {
      
   }},
-  CreateShoppingList: {screen: CreateShoppingList, navigationOptions: {
+  CreateShoppingList: {screen: CreateShoppingList, path:"createlist/",navigationOptions: {
   
 }},
-Details: {screen: Details, navigationOptions: {
+Details: {screen: Details, path:"details/:id", navigationOptions: {
   
 }},
 

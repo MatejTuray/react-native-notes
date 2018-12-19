@@ -1,4 +1,4 @@
-import undoable from "redux-undo"
+import undoable, {groupByActionTypes} from "redux-undo"
 const notesReducer = (state = [], action) => {
     switch (action.type){
         case "SAVE_NOTE":
@@ -41,15 +41,10 @@ const notesReducer = (state = [], action) => {
     }
 
 }
-function patchHistoryBloat(reducer) {
-    return (state, action, ...rest) => {
-      const res = reducer(state, action, ...rest);
-      if (res.history.history) {
-        delete res.history.history;
-      }
-      return res;
-    };
-  }
+
   
 
-export default patchHistoryBloat(undoable(notesReducer))
+export default undoable(notesReducer, {
+    limit: 1,
+    groupBy: groupByActionTypes("DELETE_NOTE")
+})
