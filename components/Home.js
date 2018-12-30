@@ -19,8 +19,8 @@ import {
 import { bindActionCreators } from "redux";
 import MaterialTabs from 'react-native-material-tabs';
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
-import { getAll, getFavourite, setFilter, setQuery } from "../actions/filterActions";
-import {rootSelector, getVisibleNotes, getVisibleNotesWithTextQuery} from "../selectors/rootSelector";
+import { getAll, getFavourite, setFilter, setQuery, handleDate } from "../actions/filterActions";
+import {rootSelector, getVisibleNotes, getVisibleNotesWithTextQuery, dateSelectWithQuery, getDateVisibleNotes} from "../selectors/rootSelector";
 import GestureRecognizer, {swipeDirections} from 'react-native-swipe-gestures';
 import { ActionCreators } from 'redux-undo';
 import { store } from "../configStore";
@@ -34,7 +34,7 @@ class Home extends React.Component {
     const { params } = navigation.state;
 
     return {
-      title: params && params.len > 0 ? `${params.len.toString()}` : params && params.date ? `${moment(params.date).format("DD/MM/YYYY")}` : "Home",
+      title: params && params.len > 0 ? `${params.len.toString()}` : params && params.date !== "" ? `${moment(params.date).format("DD/MM/YYYY")}` : "Home",
       headerStyle: {
         backgroundColor: params && params.len > 0 ? "grey" : "#1a72b4",        
         elevation: 0
@@ -42,11 +42,11 @@ class Home extends React.Component {
       headerTintColor: "white",
       headerTitleStyle: {
         color: "white"
-      },
+      },  
       headerRight:(
                
-        <MaterialHeaderButtons key={uuidv4()}>
-          
+        <MaterialHeaderButtons key={uuidv4()}>          
+        {params && params.len <= 0 && params.date && params.date !== "" ? <Item key={uuidv4()} title="x" iconName="close" size={16} style={styles.headerButton} onPress={() => params.clearDate()}/>: undefined}
           <Item key={uuidv4()} title="date-range" iconName="date-range" onPress={() => params.datePicker()} />
           <Item key={uuidv4()}  title="view-module" iconName={"view-module"} onPress={() => {console.log('Pressed switch view');}} />
          
@@ -65,7 +65,8 @@ class Home extends React.Component {
     this.handleArchive = this.handleArchive.bind(this);
     this.setTab = this.setTab.bind(this)
     this.onSwipe = this.onSwipe.bind(this)
-    
+    this.handleDataCheck = this.handleDataCheck.bind(this)
+    this.clearDate = this.clearDate.bind(this)
     this.state = {
       text: "",
       title: "",
@@ -75,12 +76,13 @@ class Home extends React.Component {
       list: true,
       gestureName: 'none',
       fetching: false,
-      
+      date: ""
     };
   }
   componentWillMount(){
     this.props.navigation.setParams({
-      datePicker: this.datePicker,     
+      datePicker: this.datePicker,
+      clearDate: this.clearDate     
     })
     this.props.setFilter(this.state.selectedTab)
   }
@@ -128,6 +130,13 @@ class Home extends React.Component {
     Linking.getInitialURL().then((res) => res !== null ? this._handleUrl(res) : console.log(res)).catch(e => console.log(e))
 
   }
+  clearDate() {
+    this.props.handleDate(0)
+    this.props.navigation.setParams({date: ""})
+    this.setState({
+      date: ""
+    })
+  }
   _handleUrl = url => { 
     this.setState({
       fetching: true
@@ -147,7 +156,7 @@ class Home extends React.Component {
     console.log(key)
     try{
       if(key !== undefined && (this.state.connection !== "none" && this.state.connection !== "unknown")){
-    axios.get(`http://192.168.1.103:5000/api/items/${key}`).then((res) => {
+    axios.get(`http://192.168.1.104:5000/api/items/${key}`).then((res) => {
         console.log(res.data);
         this.setState({
           itemData: res.data
@@ -159,8 +168,8 @@ class Home extends React.Component {
           })      }
         else{
           this.props.saveNote(this.state.itemData)
-          Alert.alert("Saved", `${this.state.itemData.title} has been saved successfuly`)
-          axios.delete(`http://192.168.1.103:5000/api/items/${key}`).then((res) => {
+          Alert.alert("Saved", `${this.state.itemData.title} has been saved successfully`)
+          axios.delete(`http://192.168.1.104:5000/api/items/${key}`).then((res) => {
             console.log(res)
           }).catch(e => console.log(e))
           this.setState({
@@ -221,7 +230,7 @@ class Home extends React.Component {
     }
   }
   componentDidUpdate(){
-    
+    console.log(this.props)
   }
   handleSelect(item) {
     if (this.state.selected.includes(item)) {
@@ -300,10 +309,30 @@ class Home extends React.Component {
         this.props.navigation.setParams({
           date: dateObj
         })
+        this.props.handleDate(Date.parse(dateObj))
+        
       }
     } catch ({ code, message }) {
       console.warn("Cannot open date picker", message);
     }
+  }
+  handleDataCheck(){
+    if(this.props.date === 0 && this.state.firstQuery === "" && this.state.selected.length === 0){
+      return this.props.reselect
+    }
+    else if (this.state.selected.length > 0){
+      return this.props.reselect
+    }
+    else if (this.props.date !== 0 && this.state.firstQuery === "" && this.state.selected.length === 0){
+      return this.props.dateSelect
+    }
+    else if (this.props.date === 0 && this.state.firstQuery !== ""){
+      return this.props.search
+    }
+    else if (this.props.date !== 0 && this.state.firstQuery !== "" && this.state.selected.length === 0){
+      return this.props.dateSelectWithQuery
+    }
+   
   }
 
   render() {
@@ -349,6 +378,7 @@ class Home extends React.Component {
         type: "primary"
       },
     ];
+
     return (
       
       <View style={styles.container}>
@@ -392,7 +422,7 @@ class Home extends React.Component {
 
         <ScrollView style={styles.scrollStyle}>
           <FlatList
-            data={this.state.firstQuery !== "" ? this.props.search : this.props.reselect}
+            data={this.handleDataCheck()}
             renderItem={({ item }) => (
               <Animatable.View animation="slideInLeft">
                 <List.Item
@@ -565,6 +595,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
     margin: 0
+  },
+  headerButton:{
+    marginRight: 130
   }
 });
 const mapStateToProps = (state) => {
@@ -573,8 +606,12 @@ const mapStateToProps = (state) => {
     selectedNote: state.selectedNote,
     filter: state.filter,
     query: state.query,
+    date: state.date,
+    dateSelect: getDateVisibleNotes(state),
     reselect: getVisibleNotes(state),
-    search: getVisibleNotesWithTextQuery(state)
+    search: getVisibleNotesWithTextQuery(state),
+    dateSelectWithQuery: dateSelectWithQuery(state)
+   
   };
 };
 const mapDispatchToProps = dispatch => {
@@ -587,7 +624,7 @@ const mapDispatchToProps = dispatch => {
       setFilter: setFilter,
       setQuery: setQuery,
       saveNote: saveNote,
-
+      handleDate: handleDate,
     },
     dispatch
   );

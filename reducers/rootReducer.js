@@ -4,6 +4,7 @@ import selectedNoteReducer from "./selectedNoteReducer"
 import titleReducer from "./titleReducer"
 import filterReducer from "./filterReducer";
 import queryReducer from "./queryReducer";
+import dateReducer from "./dateReducer";
 
 
 
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
     title: titleReducer,
     filter: filterReducer,
     query: queryReducer,
+    date: dateReducer,
     
 })
 

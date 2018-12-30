@@ -24,3 +24,15 @@ export const getVisibleNotesWithTextQuery = createSelector(
       note => note.title.includes(query)
     )
   )
+const getDate = (state) => state.date
+
+export const getDateVisibleNotes = createSelector([getVisibleNotes, getDate],
+   (notes, date) => notes.filter(note => (note.date > date) && (note.date < date + (1000*60*60*24))))
+
+
+export const dateSelectWithQuery =  createSelector(
+  [ getDateVisibleNotes, getQuery ],
+  (notes, query) => notes.filter(
+    note => note.title.includes(query)
+  )
+)

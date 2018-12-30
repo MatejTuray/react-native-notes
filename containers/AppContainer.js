@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Home from "../components/Home"
 import Details from "../components/Details"
-import { createStackNavigator, createAppContainer, createBottomTabNavigator } from "react-navigation";
+import { createStackNavigator, createAppContainer, createDrawerNavigator } from "react-navigation";
 import CreateNote from '../components/CreateNote';
 import CreateShoppingList from "../components/CreateShoppingList";
 import {connect} from "react-redux"
@@ -41,7 +41,21 @@ Details: {screen: Details, path:"details/:id", navigationOptions: {
   }
 );
 
-const AppContainer = createAppContainer(RootStack);
+const RootDrawer = createDrawerNavigator({
+  Close : {screen: RootStack}
+})
+
+const AppNav = createStackNavigator({
+  Drawer: {
+    screen: RootDrawer,
+    navigationOptions: {
+      header: null,
+      gesturesEnabled: false
+    }
+  }
+}, { headerMode: 'none' })
+
+const AppContainer = createAppContainer(AppNav);
 
 
 

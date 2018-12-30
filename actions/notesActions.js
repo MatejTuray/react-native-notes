@@ -47,4 +47,5 @@ const setArchive = (status, key) => {
     }
 }
 
+
 export {saveNote, selectNote, updateNote, deleteNote, setTitle, toggleFavorites, setArchive}

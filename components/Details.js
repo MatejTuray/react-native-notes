@@ -110,11 +110,12 @@ class Details extends Component {
       if(this.state.connection !== "none" && this.state.connection !== "unknown"){
       let link = Linking.makeUrl("",{key: this.props.note.key})
       console.log(link)
+      let httpsLink = `http://192.168.1.104:5000/?key=${this.props.note.key}`
       this.setState({
         loading: true
       })      
       if(this.props.note.text && this.props.note.text !== ""){
-      axios.post("http://192.168.1.103:5000/api/note", {
+      axios.post("http://192.168.1.104:5000/api/note", {
         key: this.props.note.key,
         title: this.props.note.title,
         text: this.props.note.text,
@@ -131,12 +132,12 @@ class Details extends Component {
        if (this.state.loading === false){
         let result = await Share.share({
           title: this.props.note.title,
-          message: link
+          message: httpsLink
         })
        }
     }
     else {
-      axios.post("http://192.168.1.103:5000/api/list", {
+      axios.post("http://192.168.1.104:5000/api/list", {
         key: this.props.note.key,
         title: this.props.note.title,
         list: this.props.note.list,
@@ -154,7 +155,7 @@ class Details extends Component {
        if (this.state.loading === false){
         let result = await Share.share({
           title: this.props.note.title,
-          message: link
+          message: httpsLink
         })
        }
     }

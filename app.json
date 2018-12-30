@@ -8,13 +8,13 @@
     "platforms": ["android"],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/loader.png",
+    "icon": "./assets/sticky_note.png",
     "androidStatusBar": {
       "backgroundColor": "#1a72b4" 
    },
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
       
     },

@@ -10,5 +10,11 @@ const setQuery = (text) => {
         payload: text
     }
 }
+const handleDate = (date) =>{
+    return{
+        type: "DATE",
+        payload: date
+    }
+}
 
-export {setFilter, setQuery}
+export {setFilter, setQuery, handleDate}

@@ -1,4 +1,4 @@
-const notesReducer = (state = "Untitled", action) => {
+const notesReducer = (state = "", action) => {
     switch (action.type){
         case "SET_TITLE":
             return  action.payload 
