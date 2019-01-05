@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { FAB, Portal } from 'react-native-paper';
-import {StyleSheet} from "react-native"
+import {StyleSheet, BackHandler} from "react-native"
 export default class MyComponent extends React.Component {
   state = {
     open: false,
@@ -18,15 +18,21 @@ export default class MyComponent extends React.Component {
             { icon: 'note-add', label: "Create a note", style: {
               backgroundColor: "#B41A34",
             }, onPress: () => this.props.navigation.navigate("CreateNote", {edit: false, titleText: "Untitled"}) },
-            { icon: 'playlist-add', label: 'Create a list', style: {
+            { icon: 'list', label: 'Create a list', style: {
               backgroundColor: "#B41A34",
             }, onPress: () => this.props.navigation.navigate("CreateShoppingList", {edit: false, titleText: "Untitled"})},
-            { icon: 'email', label: 'Email', style: {
+            { icon: 'book', label: 'Letáky', style: {
               backgroundColor: "#B41A34",
-            },onPress: () => console.log('Pressed email') },
-            { icon: 'notifications', label: 'Remind', style: {
+            },onPress: () => this.props.navigation.navigate("Letaky") },
+            { icon: 'notifications', label: 'Pripomienky', style: {
               backgroundColor: "#B41A34",
             },onPress: () => console.log('Pressed notifications') },
+            { icon: 'settings', label: 'Nastavenia', style: {
+              backgroundColor: "#B41A34",
+            },onPress: () => console.log('Pressed notifications') },
+            { icon: 'settings-power', label: 'Vypnúť', style: {
+              backgroundColor: "#B41A34",
+            },onPress: () => BackHandler.exitApp() }
           ]}
           onStateChange={({ open }) => this.setState({ open })}
           onPress={() => {

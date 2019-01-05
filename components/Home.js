@@ -46,7 +46,7 @@ class Home extends React.Component {
       headerRight:(
                
         <MaterialHeaderButtons key={uuidv4()}>          
-        {params && params.len <= 0 && params.date && params.date !== "" ? <Item key={uuidv4()} title="x" iconName="close" size={16} style={styles.headerButton} onPress={() => params.clearDate()}/>: undefined}
+        {params && params.len < 1 && params.date && params.date !== "" ? <Item key={uuidv4()} title="x" iconName="close" size={16} style={styles.headerButton} onPress={() => params.clearDate()}/>: undefined}
           <Item key={uuidv4()} title="date-range" iconName="date-range" onPress={() => params.datePicker()} />
           <Item key={uuidv4()}  title="view-module" iconName={"view-module"} onPress={() => {console.log('Pressed switch view');}} />
          
@@ -85,6 +85,7 @@ class Home extends React.Component {
       clearDate: this.clearDate     
     })
     this.props.setFilter(this.state.selectedTab)
+    this.props.navigation.setParams({len : 0})
   }
   componentDidMount(){
     store.dispatch(ActionCreators.clearHistory())
