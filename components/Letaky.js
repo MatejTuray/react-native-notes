@@ -11,7 +11,7 @@ export default class Letaky extends Component {
         const { params } = navigation.state;
     
         return {
-          title: "Aktuálne letáky",
+          title: "Current grocery flyers",
           headerStyle: {
             backgroundColor: "#1a72b4"
           },
@@ -35,7 +35,7 @@ export default class Letaky extends Component {
   
   
   componentWillMount(){
-    axios.get("http://192.168.1.173:5000/api/letaky").then((res) => {      
+    axios.get("https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/letaky").then((res) => {      
       this.setState({
         data: res.data.list
       })

@@ -21,16 +21,16 @@ export default class MyComponent extends React.Component {
             { icon: 'list', label: 'Create a list', style: {
               backgroundColor: "#B41A34",
             }, onPress: () => this.props.navigation.navigate("CreateShoppingList", {edit: false, titleText: "Untitled"})},
-            { icon: 'book', label: 'Letáky', style: {
+            { icon: 'book', label: 'Flyers', style: {
               backgroundColor: "#B41A34",
             },onPress: () => this.props.navigation.navigate("Letaky") },
-            { icon: 'notifications', label: 'Pripomienky', style: {
-              backgroundColor: "#B41A34",
-            },onPress: () => console.log('Pressed notifications') },
-            { icon: 'settings', label: 'Nastavenia', style: {
-              backgroundColor: "#B41A34",
-            },onPress: () => console.log('Pressed notifications') },
-            { icon: 'settings-power', label: 'Vypnúť', style: {
+            // { icon: 'notifications', label: 'Pripomienky', style: {
+            //   backgroundColor: "#B41A34",
+            // },onPress: () => console.log('Pressed notifications') },
+            // { icon: 'settings', label: 'Nastavenia', style: {
+            //   backgroundColor: "#B41A34",
+            // },onPress: () => console.log('Pressed notifications') },
+            { icon: 'settings-power', label: 'Exit', style: {
               backgroundColor: "#B41A34",
             },onPress: () => BackHandler.exitApp() }
           ]}

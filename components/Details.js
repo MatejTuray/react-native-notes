@@ -110,12 +110,12 @@ class Details extends Component {
       if(this.state.connection !== "none" && this.state.connection !== "unknown"){
       let link = Linking.makeUrl("",{key: this.props.note.key})
       console.log(link)
-      let httpsLink = `http://192.168.1.104:5000/?key=${this.props.note.key}`
+      let httpsLink = `https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/?key=${this.props.note.key}`
       this.setState({
         loading: true
       })      
       if(this.props.note.text && this.props.note.text !== ""){
-      axios.post("http://192.168.1.104:5000/api/note", {
+      axios.post("https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/note", {
         key: this.props.note.key,
         title: this.props.note.title,
         text: this.props.note.text,
@@ -137,7 +137,7 @@ class Details extends Component {
        }
     }
     else {
-      axios.post("http://192.168.1.104:5000/api/list", {
+      axios.post("https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/list", {
         key: this.props.note.key,
         title: this.props.note.title,
         list: this.props.note.list,

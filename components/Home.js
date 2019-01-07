@@ -157,7 +157,7 @@ class Home extends React.Component {
     console.log(key)
     try{
       if(key !== undefined && (this.state.connection !== "none" && this.state.connection !== "unknown")){
-    axios.get(`http://192.168.1.104:5000/api/items/${key}`).then((res) => {
+    axios.get(`https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/items/${key}`).then((res) => {
         console.log(res.data);
         this.setState({
           itemData: res.data
@@ -169,10 +169,7 @@ class Home extends React.Component {
           })      }
         else{
           this.props.saveNote(this.state.itemData)
-          Alert.alert("Saved", `${this.state.itemData.title} has been saved successfully`)
-          axios.delete(`http://192.168.1.104:5000/api/items/${key}`).then((res) => {
-            console.log(res)
-          }).catch(e => console.log(e))
+          Alert.alert("Saved", `${this.state.itemData.title} has been saved successfully`)          
           this.setState({
             fetching: false
           })

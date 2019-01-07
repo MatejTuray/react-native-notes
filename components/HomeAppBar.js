@@ -14,8 +14,7 @@ export default class HomeAppBar extends React.Component {
   render() {
     return (
        
-      <Appbar style={styles.bottom}>             
-        <Appbar.Action  color="white" icon="share" onPress={() => console.log('Pressed mail')} />   
+      <Appbar style={styles.bottom}>          
         <Appbar.Action  color="white" icon="delete" onPress={() => {this.props.handleDelete()}} /> 
         <Appbar.Action  color="white" icon="archive" onPress={() => {this.props.handleArchive()}} /> 
       </Appbar>
