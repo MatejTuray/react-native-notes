@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share, NetInfo} from 'react-native'
+import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share, NetInfo, } from 'react-native'
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux"
 import DetailsAppBar from "./DetailsAppBar"
@@ -110,12 +110,12 @@ class Details extends Component {
       if(this.state.connection !== "none" && this.state.connection !== "unknown"){
       let link = Linking.makeUrl("",{key: this.props.note.key})
       console.log(link)
-      let httpsLink = `https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/?key=${this.props.note.key}`
+      let httpsLink = `https://react-native-notesapi.herokuapp.com/?key=${this.props.note.key}`
       this.setState({
         loading: true
       })      
       if(this.props.note.text && this.props.note.text !== ""){
-      axios.post("https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/note", {
+      axios.post("https://react-native-notesapi.herokuapp.com/api/note", {
         key: this.props.note.key,
         title: this.props.note.title,
         text: this.props.note.text,
@@ -137,7 +137,7 @@ class Details extends Component {
        }
     }
     else {
-      axios.post("https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/list", {
+      axios.post("https://react-native-notesapi.herokuapp.com/api/list", {
         key: this.props.note.key,
         title: this.props.note.title,
         list: this.props.note.list,

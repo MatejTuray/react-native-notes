@@ -157,7 +157,7 @@ class Home extends React.Component {
     console.log(key)
     try{
       if(key !== undefined && (this.state.connection !== "none" && this.state.connection !== "unknown")){
-    axios.get(`https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/items/${key}`).then((res) => {
+    axios.get(`https://react-native-notesapi.herokuapp.com/api/items/${key}`).then((res) => {
         console.log(res.data);
         this.setState({
           itemData: res.data

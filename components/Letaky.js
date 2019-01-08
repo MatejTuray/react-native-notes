@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { ScrollView, StyleSheet, View, FlatList, Image } from 'react-native'
+import { ScrollView, StyleSheet, View, FlatList, Image, ActivityIndicator } from 'react-native'
 import {  List, Divider } from "react-native-paper";
 import * as Animatable from "react-native-animatable";
 import axios from "axios"
@@ -25,7 +25,8 @@ export default class Letaky extends Component {
       super(props)
     
       this.state = {
-         data: []
+         data: [],
+         loading : false
       }
     }    
   _handlePressButtonAsync = async (link) => {
@@ -35,10 +36,16 @@ export default class Letaky extends Component {
   
   
   componentWillMount(){
-    axios.get("https://peaceful-oasis-31467.herokuapp.com/https://react-native-notesapi.herokuapp.com/api/letaky").then((res) => {      
+    this.setState({
+      loading: true
+    })
+    axios.get("https://react-native-notesapi.herokuapp.com/api/letaky").then((res) => {      
       this.setState({
-        data: res.data.list
-      })
+        data: res.data.list,
+        loading: false,
+      });
+      
+
     }).catch((e) => console.log(e))
   }
 
@@ -46,7 +53,7 @@ export default class Letaky extends Component {
     return (
       <View style={styles.container}>
         <ScrollView style={styles.scrollStyle}>
-          <FlatList
+          {this.state.loading ? <ActivityIndicator size={200} color="blue" /> : <FlatList
             data={this.state.data}
             style={styles.listitemStyle}
             renderItem={({ item }) => (
@@ -63,7 +70,7 @@ export default class Letaky extends Component {
                 <Divider/>
                 </Animatable.View>
             )}
-            />
+                   /> }
             </ScrollView>
       </View>
     )
