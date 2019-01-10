@@ -161,7 +161,7 @@ class Home extends React.Component {
         this.setState({
           itemData: res.data
         })
-        if(this.props.notes.present.find((item) => item.key === this.state.itemData.key)){
+        if((this.props.notes.present.find((item) => item.key === this.state.itemData.key)) || (this.props.reselect.find((item) => item.key === this.state.itemData.key))){
           Alert.alert("This item is already saved", `${this.state.itemData.title} @ ${moment(this.state.itemData.date).format("DD/MM/YYYY HH:mm")}`)
           this.setState({
             fetching:false
