@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect'
 
+
  const getFilter = (state) => state.filter
  const getNotes = (state) => state.notes.present
 
@@ -35,4 +36,13 @@ export const dateSelectWithQuery =  createSelector(
   (notes, query) => notes.filter(
     note => note.title.includes(query)
   )
+)
+export const reminders = createSelector(
+  [getNotes],
+  (notes) => notes.filter(note => note.remind === true)
+)
+
+export const remindersWithQuery = createSelector(
+  [ reminders, getQuery], 
+  (notes,query) => notes.filter(note => note.title.includes(query))
 )

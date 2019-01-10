@@ -6,6 +6,7 @@ import CreateNote from '../components/CreateNote';
 import CreateShoppingList from "../components/CreateShoppingList";
 import {connect} from "react-redux"
 import Letaky from '../components/Letaky';
+import Reminders from "../components/Reminders";
 
 
 const RootStack = createStackNavigator(
@@ -25,6 +26,7 @@ Details: {screen: Details, path:"details/:id", navigationOptions: {
   
 }},
 Letaky: {screen: Letaky, path: "letaky"},
+Reminders: {screen: Reminders, path: "reminders"},
 
   HomeSelected: {screen: Home, navigationOptions: {
     title: `Selected items`, 

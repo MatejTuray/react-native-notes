@@ -24,9 +24,9 @@ export default class MyComponent extends React.Component {
             { icon: 'book', label: 'Flyers', style: {
               backgroundColor: "#B41A34",
             },onPress: () => this.props.navigation.navigate("Letaky") },
-            // { icon: 'notifications', label: 'Pripomienky', style: {
-            //   backgroundColor: "#B41A34",
-            // },onPress: () => console.log('Pressed notifications') },
+            { icon: 'notifications', label: 'Pripomienky', style: {
+              backgroundColor: "#B41A34",
+            },onPress: () => this.props.navigation.navigate("Reminders") },
             // { icon: 'settings', label: 'Nastavenia', style: {
             //   backgroundColor: "#B41A34",
             // },onPress: () => console.log('Pressed notifications') },

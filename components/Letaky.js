@@ -51,9 +51,9 @@ export default class Letaky extends Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <ScrollView style={styles.scrollStyle}>
-          {this.state.loading ? <ActivityIndicator size={200} color="blue" /> : <FlatList
+      <View style={!this.state.loading ? styles.container : {flex: 1, justifyContent: "center", alignItems: "center", alignSelf: "center"}}>
+        
+          {this.state.loading ? <View style={{flex: 1, justifyContent: "center", alignItems: "center", alignSelf: "center"}}><ActivityIndicator size={200} color="#1a72b4" /></View> : <ScrollView style={styles.scrollStyle}><FlatList
             data={this.state.data}
             style={styles.listitemStyle}
             renderItem={({ item }) => (
@@ -69,9 +69,9 @@ export default class Letaky extends Component {
                 />
                 <Divider/>
                 </Animatable.View>
-            )}
-                   /> }
-            </ScrollView>
+                   )}
+                   /></ScrollView> }
+            
       </View>
     )
   }

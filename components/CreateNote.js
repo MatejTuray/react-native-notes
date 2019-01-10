@@ -123,13 +123,13 @@ class CreateNote extends Component {
       //TODO DESIGN NOTIF
       const localNotification = {
         title: this.props.title,
-        body: `Reminder for your note - ${moment(this.state.date).format("DD/MM/YYYY, time: HH/mm")}`, // (string) — body text of the notification.
+        body: `Reminder for your note - ${moment(this.state.date).format("DD/MM/YYYY, HH/mm")}`, // (string) — body text of the notification.
         data: {key: this.state.key, color: this.state.color, title: this.props.title},
          // (optional) (object) — notification configuration specific to Android.
         android: {
           channelId: "reminders",
           sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
-          //icon (optional) (string) — URL of icon to display in notification drawer.
+          icon: "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
           color: this.state.color, // (optional) (string) — color of the notification icon in notification drawer.
           priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
           sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.

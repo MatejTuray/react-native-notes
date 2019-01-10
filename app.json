@@ -9,6 +9,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/sticky_note.png",
+    "scheme": "notes",
     "androidStatusBar": {
       "backgroundColor": "#1a72b4" 
    },

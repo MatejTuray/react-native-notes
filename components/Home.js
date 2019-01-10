@@ -47,8 +47,7 @@ class Home extends React.Component {
                
         <MaterialHeaderButtons key={uuidv4()}>          
         {params && params.len < 1 && params.date && params.date !== "" ? <Item key={uuidv4()} title="x" iconName="close" size={16} style={styles.headerButton} onPress={() => params.clearDate()}/>: undefined}
-          <Item key={uuidv4()} title="date-range" iconName="date-range" onPress={() => params.datePicker()} />
-          <Item key={uuidv4()}  title="view-module" iconName={"view-module"} onPress={() => {console.log('Pressed switch view');}} />
+          <Item key={uuidv4()} title="date-range" iconName="date-range" onPress={() => params.datePicker()} />       
          
         </MaterialHeaderButtons>
         
@@ -227,9 +226,7 @@ class Home extends React.Component {
         break;
     }
   }
-  componentDidUpdate(){
-    console.log(this.props)
-  }
+
   handleSelect(item) {
     if (this.state.selected.includes(item)) {
       this.setState({

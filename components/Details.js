@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share, NetInfo, } from 'react-native'
+import { View, Text, StyleSheet, DatePickerAndroid, TimePickerAndroid, Vibration, Share, NetInfo, Alert } from 'react-native'
 import { connect } from 'react-redux';
 import { bindActionCreators } from "redux"
 import DetailsAppBar from "./DetailsAppBar"
@@ -109,7 +109,7 @@ class Details extends Component {
     try {
       if(this.state.connection !== "none" && this.state.connection !== "unknown"){
       let link = Linking.makeUrl("",{key: this.props.note.key})
-      console.log(link)
+      
       let httpsLink = `https://react-native-notesapi.herokuapp.com/?key=${this.props.note.key}`
       this.setState({
         loading: true

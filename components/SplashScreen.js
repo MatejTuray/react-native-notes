@@ -1,15 +1,14 @@
 import React, { Component } from 'react'
 import { Text, StyleSheet, View, ActivityIndicator } from 'react-native'
 
-export default class SplashScreen extends Component {
-  render() {
+export default function SplashScreen() {  
     return (
       <View style={styles.container}>
         <ActivityIndicator size={200} color="white" />
       </View>
     )
   }
-}
+
 
 const styles = StyleSheet.create({
     container: {
@@ -19,3 +18,4 @@ const styles = StyleSheet.create({
         alignItems: "center"
       },
 })
+
