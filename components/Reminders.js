@@ -1,14 +1,11 @@
 import React, { Component } from "react";
 import { ScrollView, StyleSheet, View, FlatList, Text } from "react-native";
 import { connect } from "react-redux";
-import {  List, Divider, IconButton, Searchbar } from "react-native-paper";
+import { List, Divider, IconButton, Searchbar } from "react-native-paper";
 import * as Animatable from "react-native-animatable";
-import {bindActionCreators} from "redux"
+import { bindActionCreators } from "redux";
 import moment from "moment";
-import {
-    selectNote,   
-    toggleFavorites,    
-  } from "../actions/notesActions";
+import { selectNote, toggleFavorites } from "../actions/notesActions";
 import { setQuery } from "../actions/filterActions";
 import { reminders, remindersWithQuery } from "../selectors/rootSelector";
 class Reminders extends Component {
@@ -27,35 +24,39 @@ class Reminders extends Component {
     };
   };
   constructor(props) {
-    super(props)
-  
-    this.state = {       
-       firstQuery: ""
-    }
+    super(props);
+
+    this.state = {
+      firstQuery: ""
+    };
   }
 
   render() {
     return (
       <View>
         <Searchbar
-            placeholder="Search"
-            onChangeText={query => {
-              this.setState({ firstQuery: query });
-              this.props.setQuery(query)
-            }}
-            onIconPress={query => {
-              this.setState({ firstQuery: query });
-              this.props.setQuery(query)
-            }}       
-            value={this.state.firstQuery}
-          />
+          placeholder="Vyhľadať"
+          onChangeText={query => {
+            this.setState({ firstQuery: query });
+            this.props.setQuery(query);
+          }}
+          onIconPress={query => {
+            this.setState({ firstQuery: query });
+            this.props.setQuery(query);
+          }}
+          value={this.state.firstQuery}
+        />
         <ScrollView style={styles.scrollStyle}>
           <FlatList
-            data={this.state.firstQuery === "" ? this.props.reminders : this.props.remindersQuery}
+            data={
+              this.state.firstQuery === ""
+                ? this.props.reminders
+                : this.props.remindersQuery
+            }
             style={styles.listitemStyle}
             renderItem={({ item }) => (
               <Animatable.View animation="slideInLeft">
-                <List.Item             
+                <List.Item
                   key={item.key}
                   title={item.title}
                   description={
@@ -67,8 +68,8 @@ class Reminders extends Component {
                         }...`
                       : `${item.list[0].text + "..."}`
                   }
-                  style={                    
-                      item.color && item.color !== "#1a72b4"
+                  style={
+                    item.color && item.color !== "#1a72b4"
                       ? { backgroundColor: `${item.color}`, opacity: 0.9 }
                       : { backgroundColor: `#ffffff` }
                   }
@@ -77,9 +78,9 @@ class Reminders extends Component {
                     this.props.navigation.navigate("Details", {
                       title: item.title,
                       color: item.color,
-                      id: item.key,
+                      id: item.key
                     });
-                  }}                  
+                  }}
                   left={props => (
                     <List.Icon
                       style={styles.iconStyle}
@@ -121,34 +122,33 @@ class Reminders extends Component {
   }
 }
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff"
-      },
-      scrollStyle: {
-        lineHeight: 1,    
-      },
- 
-})
+  container: {
+    flex: 1,
+    backgroundColor: "#fff"
+  },
+  scrollStyle: {
+    lineHeight: 1
+  }
+});
 
-const mapStateToProps = (state) => {
-    return {
+const mapStateToProps = state => {
+  return {
     notes: state.notes,
     reminders: reminders(state),
     remindersQuery: remindersWithQuery(state)
-    }
+  };
 };
 
 const mapDispatchToProps = dispatch => {
-    return bindActionCreators(
-      {
-        selectNote: selectNote,      
-        toggleFavorites: toggleFavorites,
-        setQuery: setQuery
-      },
-      dispatch
-    );
-  };
+  return bindActionCreators(
+    {
+      selectNote: selectNote,
+      toggleFavorites: toggleFavorites,
+      setQuery: setQuery
+    },
+    dispatch
+  );
+};
 
 export default connect(
   mapStateToProps,

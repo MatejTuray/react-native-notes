@@ -32,13 +32,9 @@ import { TriangleColorPicker } from "react-native-color-picker";
 import { Notifications } from "expo";
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import EditableHeader from "./EditableHeader";
-import UIStepper from "react-native-ui-stepper";
-const uuidv1 = require("uuid/v1");
 const uuidv4 = require("uuid/v4");
-const convert = require("color-convert");
-import {Linking} from "expo"
 import Swipeout from "react-native-swipeout";
-
+import "moment/locale/sk";
 class CreateShoppingList extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
@@ -64,7 +60,7 @@ class CreateShoppingList extends Component {
           undefined
         ),
       headerRight: (
-        <MaterialHeaderButtons>     
+        <MaterialHeaderButtons>
           {params && params.edit === false ? (
             <Item
               title="edit"
@@ -74,7 +70,7 @@ class CreateShoppingList extends Component {
           ) : (
             undefined
           )}
-          <Item title="save" iconName="" onPress={() => params.saveNote()} />
+          <Item title="uložiť" iconName="" onPress={() => params.saveNote()} />
         </MaterialHeaderButtons>
       )
     };
@@ -88,8 +84,8 @@ class CreateShoppingList extends Component {
     this.editHeader = this.editHeader.bind(this);
     this.handleSetHeader = this.handleSetHeader.bind(this);
     this.handleCheck = this.handleCheck.bind(this);
-    this.handleListItem = this.handleListItem.bind(this)    
-    this.handleDelete = this.handleDelete.bind(this)
+    this.handleListItem = this.handleListItem.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
     this.state = {
       text: "",
       date: new Date(),
@@ -114,14 +110,14 @@ class CreateShoppingList extends Component {
     });
     this.setState({
       key: uuidv4()
-    })
+    });
   }
   editHeader() {
     let edit = this.props.navigation.state.params.edit;
 
     this.props.navigation.setParams({ edit: !edit });
   }
-  componentDidUpdate(prevProps) { 
+  componentDidUpdate(prevProps) {
     if (prevProps.title !== this.props.title) {
       this.props.navigation.setParams({ titleText: this.props.title });
       this.props.navigation.setParams({ titleText: this.props.title });
@@ -133,16 +129,21 @@ class CreateShoppingList extends Component {
   handleSetHeader() {
     this.props.navigation.setParams({ edit: false });
   }
-  
+
   handleSaveNote() {
     if (this.state.remind === true) {
-      
       console.log("scheduling notification");
       //TODO DESIGN NOTIF
       const localNotification = {
         title: this.props.title,
-        body: `Reminder for your list - ${moment(this.state.date).format("DD/MM/YYYY, time: HH/mm")}`, // (string) — body text of the notification.
-        data: {key: this.state.key, color: this.state.color, title: this.props.title},
+        body: `Reminder for your list - ${moment(this.state.date).format(
+          "DD/MM/YYYY, time: HH/mm"
+        )}`, // (string) — body text of the notification.
+        data: {
+          key: this.state.key,
+          color: this.state.color,
+          title: this.props.title
+        },
         // (optional) (object) — notification configuration specific to Android.
         android: {
           sound: true,
@@ -175,7 +176,9 @@ class CreateShoppingList extends Component {
       color: this.state.color,
       star: false,
       archive: false,
-      totalPrice: this.state.list.map(item => item.price * item.value).reduce((p,c) => p+c)
+      totalPrice: this.state.list
+        .map(item => item.price * item.value)
+        .reduce((p, c) => p + c)
     };
 
     console.log(payload);
@@ -183,7 +186,6 @@ class CreateShoppingList extends Component {
       redirect: true
     });
     this.props.saveNote(payload);
-   
   }
   _hideDateTimePicker = () =>
     this.setState({ openDateTime: false, remind: false });
@@ -200,19 +202,17 @@ class CreateShoppingList extends Component {
   showPriceModal(item) {
     console.log(item);
     this.setState({
-      setPrice: true,
-      
+      setPrice: true
     });
   }
-  handleDelete(){
-    for (let elem of this.state.list){
-      if(elem.selected === true){
-      this.setState({
-        list: this.state.list.filter((item) => item.key !== elem.key)
-      })
+  handleDelete() {
+    for (let elem of this.state.list) {
+      if (elem.selected === true) {
+        this.setState({
+          list: this.state.list.filter(item => item.key !== elem.key)
+        });
       }
     }
-  
   }
   handleCheck(item, value) {
     this.setState(prevState => ({
@@ -221,11 +221,11 @@ class CreateShoppingList extends Component {
       )
     }));
   }
- handleListItem(item){
-   this.setState({
-     selectedItem: item
-   })
- }
+  handleListItem(item) {
+    this.setState({
+      selectedItem: item
+    });
+  }
 
   async datePicker() {
     try {
@@ -288,7 +288,9 @@ class CreateShoppingList extends Component {
         ),
         onPress: () => {
           this.setState({
-            list: this.state.list.filter((item) => item.key !== this.state.selectedItem.key)
+            list: this.state.list.filter(
+              item => item.key !== this.state.selectedItem.key
+            )
           });
         },
         type: "delete"
@@ -340,9 +342,9 @@ class CreateShoppingList extends Component {
         <View style={styles.inputStyle}>
           <TextInput
             theme={{ colors: { primary: this.state.color } }}
-            label="List item"
+            label="Položka"
             value={this.state.text}
-            style={{backgroundColor: "transparent"}}
+            style={{ backgroundColor: "transparent" }}
             onChangeText={text => {
               this.setState({ text });
               this.setState({
@@ -378,115 +380,137 @@ class CreateShoppingList extends Component {
               <Swipeout
                 autoClose={true}
                 right={swipeoutBtnsRight}
-                onOpen={() => this.handleListItem(item) }
+                onOpen={() => this.handleListItem(item)}
               >
                 {item.editing ? (
-                  <View style={{flex:1, flexDirection:"column-reverse"}}>
-                 
-                  <View  style={{flex:1, flexDirection:"row", alignItems:"center"}}>
-                  
-                      <IconButton
-                            
-                            icon="euro-symbol"
-                            onPress={() => this.setState(prevState => ({
-                              list: prevState.list.map(obj =>
-                                obj.key === item.key
-                                  ? Object.assign(obj, { editing: false })
-                                  : obj
-                              )
-                            }))}
-                          />
-                    <TextInput
-                   
-                      theme={{ colors: { primary: this.state.color } }}
-                      style={{flex: 1, backgroundColor: "white"}}                  
-                      value={item.price.toString()}
-                      label={`Set price for ${item.text}`}
-                      mode="flat"
-                      keyboardType="phone-pad"
-                      onChangeText={itemText =>
-                        this.setState(prevState => ({
-                          list: prevState.list.map(obj =>
-                            obj.key === item.key
-                              ? Object.assign(obj, { price: itemText })
-                              : obj
-                          )
-                        }))
-                      }
-                      onSubmitEditing={itemText => {
-                        console.log(this.state.newText);
-                        this.setState(prevState => ({
-                          list: prevState.list.map(obj =>
-                            obj.key === item.key
-                              ? Object.assign(obj, {
-                                  price: Math.round(parseFloat((item.price * Math.pow(10, 2)).toFixed(2))) / Math.pow(10, 2),
-                                  editing: false
-                                })
-                              : obj
-                          )
-                        }));
+                  <View style={{ flex: 1, flexDirection: "column-reverse" }}>
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                        alignItems: "center"
                       }}
-                    />
-                    
-                  </View>
-               
-                  <View  style={{flex:1, flexDirection:"row", alignItems:"center"}}>
-                  
-                  <IconButton
-                        
-                        icon="label"
-                        onPress={() => this.setState(prevState => ({
-                          list: prevState.list.map(obj =>
-                            obj.key === item.key
-                              ? Object.assign(obj, { editing: false })
-                              : obj
-                          )
-                        }))}
+                    >
+                      <IconButton
+                        icon="euro-symbol"
+                        onPress={() =>
+                          this.setState(prevState => ({
+                            list: prevState.list.map(obj =>
+                              obj.key === item.key
+                                ? Object.assign(obj, { editing: false })
+                                : obj
+                            )
+                          }))
+                        }
                       />
-                <TextInput
-               
-                  theme={{ colors: { primary: this.state.color } }}
-                  style={{flex: 1, backgroundColor: "white"}}                  
-                  value={item.text}                  
-                  mode="flat"                 
-                  onChangeText={itemText =>
-                    this.setState(prevState => ({
-                      list: prevState.list.map(obj =>
-                        obj.key === item.key
-                          ? Object.assign(obj, { text: itemText })
-                          : obj
-                      )
-                    }))
-                  }
-                  onSubmitEditing={itemText => {
-                    console.log(this.state.newText);
-                    this.setState(prevState => ({
-                      list: prevState.list.map(obj =>
-                        obj.key === item.key
-                          ? Object.assign(obj, {
-                              text: item.text,
-                              editing: false
-                            })
-                          : obj
-                      )
-                    }));
-                  }}
-                />
-              </View>
+                      <TextInput
+                        theme={{ colors: { primary: this.state.color } }}
+                        style={{ flex: 1, backgroundColor: "white" }}
+                        value={item.price.toString()}
+                        label={`Nastaviť cenu pre ${item.text}`}
+                        mode="flat"
+                        keyboardType="phone-pad"
+                        onChangeText={itemText =>
+                          this.setState(prevState => ({
+                            list: prevState.list.map(obj =>
+                              obj.key === item.key
+                                ? Object.assign(obj, { price: itemText })
+                                : obj
+                            )
+                          }))
+                        }
+                        onSubmitEditing={itemText => {
+                          console.log(this.state.newText);
+                          this.setState(prevState => ({
+                            list: prevState.list.map(obj =>
+                              obj.key === item.key
+                                ? Object.assign(obj, {
+                                    price:
+                                      Math.round(
+                                        parseFloat(
+                                          (
+                                            item.price * Math.pow(10, 2)
+                                          ).toFixed(2)
+                                        )
+                                      ) / Math.pow(10, 2),
+                                    editing: false
+                                  })
+                                : obj
+                            )
+                          }));
+                        }}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                        alignItems: "center"
+                      }}
+                    >
+                      <IconButton
+                        icon="label"
+                        onPress={() =>
+                          this.setState(prevState => ({
+                            list: prevState.list.map(obj =>
+                              obj.key === item.key
+                                ? Object.assign(obj, { editing: false })
+                                : obj
+                            )
+                          }))
+                        }
+                      />
+                      <TextInput
+                        theme={{ colors: { primary: this.state.color } }}
+                        style={{ flex: 1, backgroundColor: "white" }}
+                        value={item.text}
+                        mode="flat"
+                        onChangeText={itemText =>
+                          this.setState(prevState => ({
+                            list: prevState.list.map(obj =>
+                              obj.key === item.key
+                                ? Object.assign(obj, { text: itemText })
+                                : obj
+                            )
+                          }))
+                        }
+                        onSubmitEditing={itemText => {
+                          console.log(this.state.newText);
+                          this.setState(prevState => ({
+                            list: prevState.list.map(obj =>
+                              obj.key === item.key
+                                ? Object.assign(obj, {
+                                    text: item.text,
+                                    editing: false
+                                  })
+                                : obj
+                            )
+                          }));
+                        }}
+                      />
+                    </View>
                   </View>
                 ) : (
                   <List.Item
                     key={item.key}
                     title={item.text}
                     onPress={() => console.log(item.key, item.text, " pressed")}
-                    style={item.selected ? { backgroundColor: "#b2b2b2"} : { backgroundColor: "white"}}
-                    onLongPress={() => {this.setState(prevState => ({
-                      list: prevState.list.map(obj =>
-                        obj.key === item.key
-                          ? Object.assign(obj, { selected: !item.selected })
-                          : obj
-                      )
-                    })); Vibration.vibrate(50)}}
+                    style={
+                      item.selected
+                        ? { backgroundColor: "#b2b2b2" }
+                        : { backgroundColor: "white" }
+                    }
+                    onLongPress={() => {
+                      this.setState(prevState => ({
+                        list: prevState.list.map(obj =>
+                          obj.key === item.key
+                            ? Object.assign(obj, { selected: !item.selected })
+                            : obj
+                        )
+                      }));
+                      Vibration.vibrate(50);
+                    }}
                     right={props => (
                       <View
                         {...props}
@@ -502,52 +526,77 @@ class CreateShoppingList extends Component {
                             alignItems: "center"
                           }}
                         >
-                          <Chip>{Math.round(parseFloat((item.price * item.value) * Math.pow(10, 2))).toFixed(2) / Math.pow(10, 2)} €</Chip>
+                          <Chip>
+                            {Math.round(
+                              parseFloat(
+                                item.price * item.value * Math.pow(10, 2)
+                              )
+                            ).toFixed(2) / Math.pow(10, 2)}{" "}
+                            €
+                          </Chip>
                         </View>
                         <View {...props} style={{ flexDirection: "row" }}>
-                            <IconButton
+                          <IconButton
                             {...props}
                             icon="edit"
-                            onPress={() => {this.setState(prevState => ({
-                              list: prevState.list.map(obj =>
-                                obj.key === item.key
-                                  ? Object.assign(obj, { editing: true })
-                                  : obj
-                              )
-                            })); console.log("editing?")}}
-                          />                         
-                        
-                            <IconButton
+                            onPress={() => {
+                              this.setState(prevState => ({
+                                list: prevState.list.map(obj =>
+                                  obj.key === item.key
+                                    ? Object.assign(obj, { editing: true })
+                                    : obj
+                                )
+                              }));
+                              console.log("editing?");
+                            }}
+                          />
+
+                          <IconButton
                             {...props}
-                          
                             icon="add"
-                            
-                            onPress={() => {this.setState(prevState => ({
-                              list: prevState.list.map(obj =>
-                                obj.key === item.key
-                                  ? Object.assign(obj, { value: obj.value + 1})
-                                  : obj
-                              )
-                            })); console.log("editing?")}}
+                            onPress={() => {
+                              this.setState(prevState => ({
+                                list: prevState.list.map(obj =>
+                                  obj.key === item.key
+                                    ? Object.assign(obj, {
+                                        value: obj.value + 1
+                                      })
+                                    : obj
+                                )
+                              }));
+                              console.log("editing?");
+                            }}
                           />
-                              <IconButton
+                          <IconButton
                             {...props}
-                              icon="remove" 
-                              onPress={() => {this.setState(prevState => ({
-                              list: prevState.list.map(obj =>
-                                obj.key === item.key
-                                  ? Object.assign(obj, { value: obj.value !== 1 ? obj.value - 1 : 1})
-                                  : obj
-                              )
-                            })); console.log("editing?")}}
+                            icon="remove"
+                            onPress={() => {
+                              this.setState(prevState => ({
+                                list: prevState.list.map(obj =>
+                                  obj.key === item.key
+                                    ? Object.assign(obj, {
+                                        value:
+                                          obj.value !== 1 ? obj.value - 1 : 1
+                                      })
+                                    : obj
+                                )
+                              }));
+                              console.log("editing?");
+                            }}
                           />
-                   
-                       </View>                      
+                        </View>
                       </View>
                     )}
                     left={props => (
-                      <View {...props} style={{ marginRight: 10, justifyContent: "center", alignItems: "center" }}>
-                      <Chip>{item.value}</Chip>
+                      <View
+                        {...props}
+                        style={{
+                          marginRight: 10,
+                          justifyContent: "center",
+                          alignItems: "center"
+                        }}
+                      >
+                        <Chip>{item.value} ks</Chip>
                       </View>
                     )}
                   />
@@ -565,7 +614,11 @@ class CreateShoppingList extends Component {
             handleSaveNote={this.handleSaveNote}
             openModal={this._showModal}
             handleDelete={this.handleDelete}
-            totalPrice={this.state.list !== [] ?  this.state.list.map(item => item.value*item.price) : 0}
+            totalPrice={
+              this.state.list !== []
+                ? this.state.list.map(item => item.value * item.price)
+                : 0
+            }
           />
         </View>
         <DateTimePicker
@@ -581,7 +634,8 @@ class CreateShoppingList extends Component {
           style={styles.snackbarStyle}
           duration={5000}
         >
-          Reminder: {moment(this.state.reminderDate).format("DD/MM/YYYY HH:mm")}
+          Pripomienka je nastavená na:{" "}
+          {moment(this.state.reminderDate).format("DD/MM/YYYY HH:mm")}
         </Snackbar>
         <Snackbar
           visible={this.state.redirect}
@@ -590,9 +644,9 @@ class CreateShoppingList extends Component {
             this.props.navigation.navigate("Home");
           }}
           style={styles.snackbarStyle}
-          duration={3000}
+          duration={1000}
         >
-          List saved...
+          Uložené, vraciam Vás domov...
         </Snackbar>
         <Portal>
           <Modal
@@ -633,7 +687,7 @@ const styles = StyleSheet.create({
   },
   scrollStyle: {
     lineHeight: 1,
-    marginBottom: 55,
+    marginBottom: 55
   },
   buttonStyle: {
     marginTop: 20,

@@ -24,20 +24,16 @@ export default class AppBar extends React.Component {
           icon="color-lens"
           onPress={() => this.props.openModal()}
         />
-        <Appbar.Action
-          color="white"
-          icon={this.state.voice ? "mic-off" : "mic"}
-          onPress={() => {
-            this.setState({
-              voice: !this.state.voice
-            });
-          }}
-        />
-        {this.props.handleDelete ?  <Appbar.Action
-          color="white"
-          icon="delete"
-          onPress={() => this.props.handleDelete()}
-        />: undefined}
+
+        {this.props.handleDelete ? (
+          <Appbar.Action
+            color="white"
+            icon="delete"
+            onPress={() => this.props.handleDelete()}
+          />
+        ) : (
+          undefined
+        )}
         <Appbar.Action
           color="white"
           icon="date-range"
@@ -58,7 +54,7 @@ export default class AppBar extends React.Component {
                 : 0
             } €`}
             titleStyle={{ color: "white" }}
-            subtitle={"Total price"}
+            subtitle={"Celková cena"}
             subtitleStyle={{ color: "white" }}
           />
         ) : (

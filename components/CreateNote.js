@@ -26,8 +26,7 @@ import { TriangleColorPicker } from "react-native-color-picker";
 import { Notifications } from "expo";
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import EditableHeader from "./EditableHeader";
-import {Linking} from "expo"
-
+import "moment/locale/sk";
 
 const convert = require("color-convert");
 const uuidv4 = require("uuid/v4");
@@ -66,7 +65,7 @@ class CreateNote extends Component {
           ) : (
             undefined
           )}
-          <Item title="save" iconName="" onPress={() => params.saveNote()} />
+          <Item title="Uložiť" iconName="" onPress={() => params.saveNote()} />
         </MaterialHeaderButtons>
       )
     };
@@ -98,7 +97,7 @@ class CreateNote extends Component {
     });
     this.setState({
       key: uuidv4()
-    })
+    });
   }
   editHeader() {
     let edit = this.props.navigation.state.params.edit;
@@ -116,20 +115,25 @@ class CreateNote extends Component {
     this.props.navigation.setParams({ edit: false });
   }
   handleSaveNote() {
-    
     if (this.state.remind === true) {
-      
       console.log("scheduling notification");
       //TODO DESIGN NOTIF
       const localNotification = {
         title: this.props.title,
-        body: `Reminder for your note - ${moment(this.state.date).format("DD/MM/YYYY, HH/mm")}`, // (string) — body text of the notification.
-        data: {key: this.state.key, color: this.state.color, title: this.props.title},
-         // (optional) (object) — notification configuration specific to Android.
+        body: `Reminder for your note - ${moment(this.state.date).format(
+          "DD/MM/YYYY, HH/mm"
+        )}`, // (string) — body text of the notification.
+        data: {
+          key: this.state.key,
+          color: this.state.color,
+          title: this.props.title
+        },
+        // (optional) (object) — notification configuration specific to Android.
         android: {
           channelId: "reminders",
           sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
-          icon: "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
+          icon:
+            "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
           color: this.state.color, // (optional) (string) — color of the notification icon in notification drawer.
           priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
           sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
@@ -155,16 +159,15 @@ class CreateNote extends Component {
       reminderDate: this.state.reminderDate,
       color: this.state.color,
       star: false,
-      archive: false,
+      archive: false
     };
     console.log(payload);
     this.setState({
       redirect: true
     });
-    if(payload.title !== "" && payload.text !== ""){
-    this.props.saveNote(payload)
-    
-      }
+    if (payload.title !== "" && payload.text !== "") {
+      this.props.saveNote(payload);
+    }
   }
 
   _hideDateTimePicker = () =>
@@ -274,7 +277,7 @@ class CreateNote extends Component {
         <View style={styles.inputStyle}>
           <TextInput
             theme={{ colors: { primary: this.state.color } }}
-            label="Note"
+            label="Poznámka"
             value={this.state.text}
             onChangeText={text => this.setState({ text })}
             mode="outlined"
@@ -304,7 +307,8 @@ class CreateNote extends Component {
           style={styles.snackbarStyle}
           duration={5000}
         >
-          Reminder: {moment(this.state.reminderDate).format("DD/MM/YYYY HH:mm")}
+          Pripomienka je nastavená na:{" "}
+          {moment(this.state.reminderDate).format("DD/MM/YYYY HH:mm")}
         </Snackbar>
         <Snackbar
           visible={this.state.redirect}
@@ -313,9 +317,9 @@ class CreateNote extends Component {
             this.props.navigation.navigate("Home");
           }}
           style={styles.snackbarStyle}
-          duration={3000}
+          duration={1000}
         >
-          Note saved...
+          Uložené, vraciam Vás domov...
         </Snackbar>
         <Portal>
           <Modal
