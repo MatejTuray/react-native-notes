@@ -7,7 +7,13 @@ const notesReducer = (state = [], action) => {
         const updatedItems = state.map(item => {
             if(item.key === action.key){
                 console.log(action.payload)
-              return { ...item, ...action.payload }
+                if (action.payload.text) {
+              return { ...item, ...action.payload  }
+                }
+                else{
+                    return action.payload
+                   
+                }
             }
             return item
           })
@@ -17,6 +23,7 @@ const notesReducer = (state = [], action) => {
             if(item.key === action.key){
                 console.log(action.payload)
                 console.log(item)
+                
               return { ...item, ...action.payload }
             }
             return item

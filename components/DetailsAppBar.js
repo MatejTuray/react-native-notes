@@ -24,8 +24,13 @@ export default class DetailsAppBar extends React.Component {
           icon="share"
           onPress={() => this.props.handleShare()}
         />
+        <Appbar.Action
+        color="white"
+        icon="menu"
+        onPress={() => this.props.handleHideMenu()}
+      />
 
-        {this.props.totalPrice !== "" ? (
+        {this.props.totalPrice !== "" ? 
           <Appbar.Content
             title={`${
               this.props.totalPrice
@@ -40,9 +45,9 @@ export default class DetailsAppBar extends React.Component {
             subtitle={"Celková cena"}
             subtitleStyle={{ color: "white" }}
           />
-        ) : (
+         : 
           undefined
-        )}
+          }
       </Appbar>
     );
   }

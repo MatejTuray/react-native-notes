@@ -126,7 +126,7 @@ class Home extends React.Component {
     this.props.navigation.setParams({ len: 0 });
   }
   componentDidMount() {
-    store.dispatch(ActionCreators.clearHistory());
+    store.dispatch(ActionCreators.clearHistory())
     console.log(this.props);
     NetInfo.getConnectionInfo().then(connectionInfo => {
       console.log(

@@ -1,3 +1,5 @@
+//TODO ERROR HANDLING EMPTY / VISIBLE
+
 import React, { Component } from "react";
 import {
   View,

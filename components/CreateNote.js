@@ -1,3 +1,5 @@
+//TODO ERROR HANDLING
+
 import React, { Component } from "react";
 import {
   View,

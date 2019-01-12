@@ -1,14 +1,16 @@
 import * as React from "react";
 import { FAB, Portal } from "react-native-paper";
 import { StyleSheet, BackHandler } from "react-native";
-export default class MyComponent extends React.Component {
+export default class FabComponent extends React.Component {
   state = {
     open: false
   };
 
   render() {
     return (
+      
       <Portal style={styles.PortalStyle}>
+        {this.props.hide !== true ? 
         <FAB.Group
           style={styles.fabStyle}
           open={this.state.open}
@@ -78,19 +80,21 @@ export default class MyComponent extends React.Component {
               // do something if the speed dial is open
             }
           }}
-        />
+        /> : undefined}
       </Portal>
     );
   }
 }
 const styles = StyleSheet.create({
   fabStyle: {
-    paddingBottom: 60,
-    marginBottom: 0
+    paddingBottom: 90,
+    marginBottom: 0,
+    
   },
   PortalStyle: {
     color: "#aa6a39",
     marginBottom: 0,
-    paddingBottom: 60
+    paddingBottom: 90,
+   
   }
 });

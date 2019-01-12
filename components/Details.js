@@ -8,7 +8,9 @@ import {
   Vibration,
   Share,
   NetInfo,
-  Alert
+  Alert,
+  Keyboard,
+ 
 } from "react-native";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -30,6 +32,8 @@ import { updateNote } from "../actions/notesActions";
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import { Linking } from "expo";
 import axios from "axios";
+const uuidv4 = require("uuid").v4
+import FabComponent from "./FabComponent"
 
 class Details extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -46,16 +50,17 @@ class Details extends Component {
       headerTintColor: "white",
       headerTitleStyle: {
         color: "white"
-      }
-      // headerRight: (
-      //   <MaterialHeaderButtons>
-      //     <Item
-      //       title="UPDATE"
-      //       iconName="update"
-      //       onPress={() => params.handleUpdate()}
-      //     />
-      //   </MaterialHeaderButtons>
-      // )
+      },
+      headerRight: (
+        <MaterialHeaderButtons>
+          <Item
+            title="UPDATE"
+            iconSize={30}
+            iconName={params.adding ? "done" : "playlist-add"}
+            onPress={() => params.toggleAdd()}
+          />
+        </MaterialHeaderButtons>
+      )
     };
   };
   constructor(props) {
@@ -65,43 +70,45 @@ class Details extends Component {
     this.handleUpdate = this.handleUpdate.bind(this);
     this.handleShare = this.handleShare.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
+    this.toggleAdd = this.toggleAdd.bind(this);
+    this.handleHideMenu = this.handleHideMenu.bind(this);
+    this._keyboardDidHide = this._keyboardDidHide.bind(this);
+    this._keyboardDidShow = this._keyboardDidShow.bind(this);
+    
     this.state = {
       text: "",
       list: [],
       selected: [],
       visible: false,
-      loading: false
+      loading: false,
+      adding: false,
+      priceAmount: false,
+      hide: false
     };
   }
   componentWillMount() {
     this.props.navigation.setParams({
-      handleUpdate: this.handleUpdate
+      handleUpdate: this.handleUpdate,
+      toggleAdd: this.toggleAdd,
+      adding: false
     });
   }
   componentDidMount() {
-    console.log(this.props.note);
+    
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this._keyboardDidHide);
+  
     this.setState({
       text: this.props.note.text,
       list: this.props.note.list
     });
     NetInfo.getConnectionInfo().then(connectionInfo => {
-      console.log(
-        "Initial, type: " +
-          connectionInfo.type +
-          ", effectiveType: " +
-          connectionInfo.effectiveType
-      );
-      this.setState({
+       this.setState({
         connection: connectionInfo.type
       });
     });
     function handleFirstConnectivityChange(connectionInfo) {
-      console.log(
-        "First change, type: " +
-          connectionInfo.type +
-          ", effectiveType: " +
-          connectionInfo.effectiveType
-      );
+      
       this.setState({
         connection: connectionInfo.type
       });
@@ -112,13 +119,26 @@ class Details extends Component {
     }
     NetInfo.addEventListener("connectionChange", handleFirstConnectivityChange);
   }
+  toggleAdd() {
+    this.props.navigation.setParams({ adding: !this.state.adding });
+    this.setState({
+      adding: !this.state.adding
+    });
+  }
+  handleHideMenu(){
+    this.setState({
+      hide: !this.state.hide
+    })
+  }
   handleCheck(item) {
     this.setState(prevState => ({
       list: prevState.list.map(obj =>
         obj.key === item.key ? Object.assign(obj, { status: !obj.status }) : obj
       )
     }));
+    
   }
+ 
   handleDelete() {
     for (let elem of this.state.selected) {
       this.setState({
@@ -139,6 +159,17 @@ class Details extends Component {
       });
     }
     Vibration.vibrate(50);
+  }
+  _keyboardDidShow () {
+    this.setState({
+      keyboard: true
+    });
+  }
+
+  _keyboardDidHide () {
+    this.setState({
+      keyboard: false
+    })
   }
 
   async handleShare() {
@@ -168,7 +199,7 @@ class Details extends Component {
               color: this.props.note.color
             })
             .then(res => {
-              console.log(res);
+              
               this.setState({
                 loading: false
               });
@@ -193,7 +224,7 @@ class Details extends Component {
               totalPrice: this.props.note.totalPrice
             })
             .then(res => {
-              console.log(res);
+              
               this.setState({
                 loading: false
               });
@@ -207,15 +238,7 @@ class Details extends Component {
           }
         }
       }
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log("shared with", result.activityType);
-        } else {
-          console.log("shared");
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log("dismissed");
-      }
+      
     } catch (error) {
       alert(error.message);
     }
@@ -227,16 +250,19 @@ class Details extends Component {
         obj.key === item.key ? Object.assign(obj, { editing: true }) : obj
       )
     }));
+    
   }
   handleUpdate() {
-    if (this.state.text === "") {
-      this.props.updateNote(this.state.list, this.props.note.key);
+    if (this.state.list && this.state.list.length > 1) {      
+      let payload = this.props.note
+      payload.list = this.state.list     
+      console.log(payload.title)
+      this.props.updateNote(payload, this.props.note.key);
+      
     } else {
       this.props.updateNote({ text: this.state.text }, this.props.note.key);
     }
-    this.setState({
-      redirect: true
-    });
+   
   }
   async datePicker() {
     let timeString;
@@ -248,9 +274,7 @@ class Details extends Component {
 
       if (action === DatePickerAndroid.dateSetAction) {
         let dateString = `${day}-${month + 1}-${year}`;
-        let dateObj = moment(dateString, "DD-MM-YYYY").toDate();
-        console.log(dateString);
-        console.log(dateObj);
+        let dateObj = moment(dateString, "DD-MM-YYYY").toDate();    
         this.setState({
           date: dateObj
         });
@@ -264,8 +288,7 @@ class Details extends Component {
             } else {
               timeString = `${hour}:0${minute}`;
             }
-            console.log(timeString);
-            this.setState({
+             this.setState({
               time: timeString
             });
           }
@@ -277,10 +300,136 @@ class Details extends Component {
       console.warn("Cannot open date picker", message);
     }
   }
+  componentWillUnmount () {
+    
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
+    console.log("unmounting")
+    if (this.state.list.length >= 2){
+    this.handleUpdate()
+    }
+    else{
+      console.log("error?")
+    }
+    
+    
+    
+  }
 
   render() {
+    let swipeoutBtnsRight = [
+      {
+        component: (
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column"
+            }}
+          >
+            <IconButton icon="delete" color="white" />
+          </View>
+        ),
+        onPress: () => {
+          if (this.state.list.length >= 2){
+          this.setState({
+            list: this.state.list.filter(
+              item => item.key !== this.state.currItem.key
+            )
+          });
+        }
+        else {
+          console.log("error?")
+        }
+        },
+        type: "delete"
+      }
+    ];
     return (
       <View style={styles.viewStyle}>
+      
+      {this.state.adding ? <View style={styles.inputStyle}>
+      <TextInput
+        theme={{ colors: { primary: this.props.note.color } }}
+        label="Položka"
+        value={this.state.text}
+        style={{ backgroundColor: "transparent" }}                    
+        onChangeText={text => {
+          this.setState({ text });
+          this.setState({
+            expanded: true
+          });
+        }}
+        editable={!this.state.priceAmount}
+        onSubmitEditing={() => {          
+          
+          this.setState({              
+            priceAmount: true,
+          });
+        }}
+        mode="flat"
+      />
+      <Divider/>
+     </View> 
+    : 
+     undefined}      
+        {this.state.priceAmount && this.state.adding ?  <View style={this.state.keyboard ? styles.rowStyle : {flex: 0.1, marginBottom: 55, flexDirection: "row"}}>
+        <View style={{ flex: 1 }}>
+        <TextInput
+          theme={{ colors: { primary: this.props.note.color } }}
+          label="Množstvo"
+          value={this.state.textAmount}
+          style={{ backgroundColor: "transparent", marginRight: 5 }}                    
+          onChangeText={textAmount => {
+            this.setState({ textAmount });      
+          }}         
+         
+          mode="flat"
+          keyboardType="phone-pad"
+        />
+        </View>
+        <View style={{flex: 1}}>
+        <TextInput
+        theme={{ colors: { primary: this.props.note.color } }}
+          label="Cena"
+          value={this.state.textPrice}
+          style={{ backgroundColor: "transparent", marginLeft: 5 }}                    
+          onChangeText={textPrice => {
+            this.setState({ textPrice });             
+          }}
+          onSubmitEditing={() => {                    
+              this.setState({
+                text: "",
+                textPrice: "",
+                textAmount: "",
+                priceAmount: false,
+                adding: false,
+                prevLen: this.state.list.length,
+                list: this.state.list.concat({
+                  text: this.state.text,
+                  status: false,
+                  editing: false,
+                  editValue: false,
+                  value: parseInt(this.state.textAmount),
+                  price: parseInt(this.state.textPrice),
+                  selected: false,
+                  key: uuidv4()
+                }),
+               
+              });     
+            if(this.state.list.length > this.state.prevLen){             
+            this.props.navigation.setParams({adding: false})
+           
+          
+            };
+          }}
+          mode="flat"
+          keyboardType="phone-pad"/>
+          </View>
+        <Divider/>
+       </View>: 
+       undefined } 
         {this.props.note.text ? (
           <TextInput
             theme={{ colors: { primary: this.props.note.color } }}
@@ -292,12 +441,11 @@ class Details extends Component {
             multiline={true}
             numberOfLines={12}
           />
-        ) : (
-          <ScrollView style={styles.scrollStyle}>
+        ) : <ScrollView style={ styles.scrollStyle}>
             <FlatList
-              data={this.state.list}
+              data= {this.state.list}
               renderItem={({ item, index }) => (
-                <Swipeout>
+                <Swipeout onOpen={() => this.setState({currItem: item})} left={swipeoutBtnsRight} buttonWidth={80} sensitivity={1}>
                   {item.editing ? (
                     <View style={styles.inputStyle}>
                       <TextInput
@@ -323,7 +471,7 @@ class Details extends Component {
                           }))
                         }
                         onSubmitEditing={itemText => {
-                          console.log(this.state.newText);
+                     
                           this.setState(prevState => ({
                             list: prevState.list.map(obj =>
                               obj.key === item.key
@@ -340,8 +488,12 @@ class Details extends Component {
                   ) : (
                     <List.Item
                       key={item.key}
-                      title={`${item.text}:  ${item.value}ks - ${item.price *
-                        item.value}€ spolu`}
+                      title={
+                        item.price != 0
+                          ? `${item.text}:  ${item.value}ks - ${item.price *
+                              item.value}€ spolu`
+                          : `${item.text}: ${item.value}ks`
+                      }
                       style={
                         this.state.selected.includes(item)
                           ? { backgroundColor: "#b2b2b2" }
@@ -376,31 +528,15 @@ class Details extends Component {
                 </Swipeout>
               )}
             />
-          </ScrollView>
-        )}
-        <View style={styles.snackbarStyle}>
-          {this.state.list &&
-          !this.state.redirect &&
-          this.props.note.text === "" ? (
-            <ProgressBar
-              progress={
-                this.state.list
-                  ? this.state.list.filter(item => item.status === true)
-                      .length / this.state.list.length
-                  : undefined
-              }
-              color={this.props.note.color}
-              style={styles.ProgressBarStyle}
-            />
-          ) : (
-            undefined
-          )}
-        </View>
+          </ScrollView>}          
+       
+        
         <View style={styles.AppBarStyle}>
           <Animatable.View animation="bounceInLeft">
             <DetailsAppBar
               totalPrice={this.props.note.totalPrice}
               handleShare={this.handleShare}
+             
               color={
                 this.state.selected.length > 0 ? "gray" : this.props.note.color
               }
@@ -408,22 +544,32 @@ class Details extends Component {
               handleUpdate={() => this.handleUpdate()}
             />
           </Animatable.View>
-        </View>
-        <Snackbar
-          visible={this.state.redirect}
-          onDismiss={() => {
-            this.setState({ redirect: false });
-          }}
-          style={styles.snackbarStyle}
-          duration={3000}
-        >
-          Aktualizované
-        </Snackbar>
+        </View>    
+        {this.state.list && this.state.adding === false && this.state.priceAmount === false?         
+      <View style={styles.progressStyle}>
+      <ProgressBar
+       progress={
+         this.state.list
+           ? this.state.list.filter(item => item.status === true)
+               .length / this.state.list.length
+           : undefined
+       }
+       color={this.props.note.color}
+       style={styles.ProgressBarStyle}
+     /></View> : undefined}
+  
       </View>
     );
   }
 }
 const styles = StyleSheet.create({
+  rowStyle:{
+    flex: 0.1,
+    flexDirection: "row",
+    margin: 5,
+    marginBottom: 55,
+   
+  },
   viewStyle: {
     flex: 1
   },
@@ -494,9 +640,21 @@ const styles = StyleSheet.create({
     padding: 0,
     borderRadius: 0
   },
+  progressStyle: {  
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 55,
+    zIndex: 200,
+    margin: 0,
+    padding: 0,
+    borderRadius: 0
+  },
   scrollStyle: {
-    lineHeight: 1,
-    marginBottom: 55
+    flex: 1,
+    lineHeight: 1, 
+    height: 300,  
+    marginBottom: 55     
   },
   listItemStyle: {
     backgroundColor: "white"
