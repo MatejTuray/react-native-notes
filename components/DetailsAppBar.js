@@ -11,6 +11,7 @@ export default class DetailsAppBar extends React.Component {
   }
 
   render() {
+    console.log(this.props.totalPrice)
     return (
       <Appbar
         style={
@@ -26,28 +27,11 @@ export default class DetailsAppBar extends React.Component {
         />
         <Appbar.Action
         color="white"
-        icon="menu"
+        icon={"menu"}
         onPress={() => this.props.handleHideMenu()}
       />
 
-        {this.props.totalPrice !== "" ? 
-          <Appbar.Content
-            title={`${
-              this.props.totalPrice
-                ? Math.round(
-                    parseFloat(
-                      (this.props.totalPrice * Math.pow(10, 2)).toFixed(2)
-                    )
-                  ) / Math.pow(10, 2)
-                : 0
-            } €`}
-            titleStyle={{ color: "white" }}
-            subtitle={"Celková cena"}
-            subtitleStyle={{ color: "white" }}
-          />
-         : 
-          undefined
-          }
+     
       </Appbar>
     );
   }

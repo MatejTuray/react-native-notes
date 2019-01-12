@@ -5,6 +5,7 @@ import titleReducer from "./titleReducer"
 import filterReducer from "./filterReducer";
 import queryReducer from "./queryReducer";
 import dateReducer from "./dateReducer";
+import FABReducer from "./FABReducer";
 
 
 
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
     filter: filterReducer,
     query: queryReducer,
     date: dateReducer,
+    fab: FABReducer
     
 })
 

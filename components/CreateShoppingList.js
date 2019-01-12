@@ -37,6 +37,7 @@ import EditableHeader from "./EditableHeader";
 const uuidv4 = require("uuid/v4");
 import Swipeout from "react-native-swipeout";
 import "moment/locale/sk";
+import FABToggle from "../actions/FABActions";
 class CreateShoppingList extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
@@ -88,6 +89,7 @@ class CreateShoppingList extends Component {
     this.handleCheck = this.handleCheck.bind(this);
     this.handleListItem = this.handleListItem.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
+    this.handleHideMenu = this.handleHideMenu.bind(this)
     this.state = {
       text: "",
       date: new Date(),
@@ -228,7 +230,9 @@ class CreateShoppingList extends Component {
       selectedItem: item
     });
   }
-
+  handleHideMenu(){
+    this.props.FABToggle()
+  }
   async datePicker() {
     try {
       const { action, year, month, day } = await DatePickerAndroid.open({
@@ -611,6 +615,8 @@ class CreateShoppingList extends Component {
 
         <View style={styles.AppBarStyle}>
           <AppBar
+          handleHideMenu = {this.handleHideMenu}
+          fab = {this.props.fab}
             color={this.state.color}
             openDatePicker={this.datePicker}
             handleSaveNote={this.handleSaveNote}
@@ -765,11 +771,12 @@ const styles = StyleSheet.create({
   }
 });
 const mapStateToProps = state => ({
-  title: state.title
+  title: state.title,
+  fab: state.fab,
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote }, dispatch);
+  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle }, dispatch);
 };
 
 export default connect(

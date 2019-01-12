@@ -1,16 +1,26 @@
 import * as React from "react";
 import { FAB, Portal } from "react-native-paper";
 import { StyleSheet, BackHandler } from "react-native";
-export default class FabComponent extends React.Component {
-  state = {
-    open: false
-  };
+import FABToggle from "../actions/FABActions";
+import { connect } from "react-redux"
+import {bindActionCreators} from "redux"
+export class FabComponent extends React.Component {
+  constructor(props) {
+    super(props)
+  
+    this.state = {
+       open: false
+    }
+  }
+  componentDidMount(){
+    console.log(this.props)
+  }
 
   render() {
     return (
       
       <Portal style={styles.PortalStyle}>
-        {this.props.hide !== true ? 
+        {this.props.fab === true ? 
         <FAB.Group
           style={styles.fabStyle}
           open={this.state.open}
@@ -98,3 +108,23 @@ const styles = StyleSheet.create({
    
   }
 });
+
+const mapStateToProps = state => {
+  return {
+      fab: state.fab
+  };
+};
+const mapDispatchToProps = dispatch => {
+  return bindActionCreators(
+    {
+     FABToggle: FABToggle
+    
+    },
+    dispatch
+  );
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(FabComponent);

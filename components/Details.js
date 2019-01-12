@@ -36,6 +36,7 @@ import { Linking } from "expo";
 import axios from "axios";
 const uuidv4 = require("uuid").v4
 import FabComponent from "./FabComponent"
+import FABToggle from "../actions/FABActions";
 
 class Details extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -85,7 +86,8 @@ class Details extends Component {
       loading: false,
       adding: false,
       priceAmount: false,
-      hide: false
+      hide: false,
+      totalPrice: 0
     };
   }
   componentWillMount() {
@@ -102,7 +104,8 @@ class Details extends Component {
   
     this.setState({
       text: this.props.note.text,
-      list: this.props.note.list
+      list: this.props.note.list,
+      totalPrice: this.props.totalPrice
     });
     NetInfo.getConnectionInfo().then(connectionInfo => {
        this.setState({
@@ -128,9 +131,7 @@ class Details extends Component {
     });
   }
   handleHideMenu(){
-    this.setState({
-      hide: !this.state.hide
-    })
+    this.props.FABToggle()
   }
   handleCheck(item) {
     this.setState(prevState => ({
@@ -194,7 +195,7 @@ class Details extends Component {
             .post("https://react-native-notesapi.herokuapp.com/api/note", {
               key: this.props.note.key,
               title: this.props.note.title,
-              text: this.props.note.text,
+              text: this.state.text,
               date: this.props.note.date,
               remind: this.props.note.remind,
               reminderDate: this.props.note.reminderDate,
@@ -218,12 +219,12 @@ class Details extends Component {
             .post("https://react-native-notesapi.herokuapp.com/api/list", {
               key: this.props.note.key,
               title: this.props.note.title,
-              list: this.props.note.list,
+              list: this.state.list,
               date: this.props.note.date,
               remind: this.props.note.remind,
               reminderDate: this.props.note.reminderDate,
               color: this.props.note.color,
-              totalPrice: this.props.note.totalPrice
+              totalPrice: this.state.totalPrice
             })
             .then(res => {
               
@@ -533,9 +534,10 @@ class Details extends Component {
         <View style={styles.AppBarStyle}>
           <Animatable.View animation="bounceInLeft">
             <DetailsAppBar
-              totalPrice={this.props.note.totalPrice}
+              totalPrice={this.state.totalPrice}
               handleShare={this.handleShare}
-             
+              handleHideMenu = {this.handleHideMenu}
+              fab = {this.props.fab}
               color={
                 this.state.selected.length > 0 ? "gray" : this.props.note.color
               }
@@ -666,12 +668,13 @@ const styles = StyleSheet.create({
 const mapStateToProps = state => {
   return {
     note: state.selectedNote,
-    notes: state.notes
+    notes: state.notes,
+    fab: state.fab
   };
 };
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ updateNote: updateNote }, dispatch);
+  return bindActionCreators({ updateNote: updateNote, FABToggle: FABToggle }, dispatch);
 };
 
 export default connect(

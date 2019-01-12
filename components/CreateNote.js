@@ -29,6 +29,7 @@ import { Notifications } from "expo";
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import EditableHeader from "./EditableHeader";
 import "moment/locale/sk";
+import FABToggle from "../actions/FABActions";
 
 const convert = require("color-convert");
 const uuidv4 = require("uuid/v4");
@@ -80,7 +81,7 @@ class CreateNote extends Component {
     this._hideDateTimePicker = this._hideDateTimePicker.bind(this);
     this.editHeader = this.editHeader.bind(this);
     this.handleSetHeader = this.handleSetHeader.bind(this);
-
+    this.handleHideMenu = this.handleHideMenu.bind(this)
     this.state = {
       text: "",
       date: new Date(),
@@ -100,6 +101,9 @@ class CreateNote extends Component {
     this.setState({
       key: uuidv4()
     });
+  }
+  handleHideMenu(){
+    this.props.FABToggle()
   }
   editHeader() {
     let edit = this.props.navigation.state.params.edit;
@@ -290,6 +294,8 @@ class CreateNote extends Component {
 
         <View style={styles.AppBarStyle}>
           <AppBar
+          handleHideMenu = {this.handleHideMenu}
+          fab = {this.props.fab}
             openDatePicker={this.datePicker}
             handleSaveNote={this.handleSaveNote}
             color={this.state.color}
@@ -428,11 +434,12 @@ const styles = StyleSheet.create({
   }
 });
 const mapStateToProps = state => ({
-  title: state.title
+  title: state.title,
+  fab: state.fab,
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote }, dispatch);
+  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle }, dispatch);
 };
 
 export default connect(
