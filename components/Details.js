@@ -1,3 +1,5 @@
+// TODO CHECK LIST SAVE 
+
 import React, { Component } from "react";
 import {
   View,
@@ -332,16 +334,13 @@ class Details extends Component {
           </View>
         ),
         onPress: () => {
-          if (this.state.list.length >= 2){
+          
           this.setState({
             list: this.state.list.filter(
               item => item.key !== this.state.currItem.key
             )
           });
-        }
-        else {
-          console.log("error?")
-        }
+  
         },
         type: "delete"
       }
@@ -418,11 +417,11 @@ class Details extends Component {
                 }),
                
               });     
-            if(this.state.list.length > this.state.prevLen){             
+                         
             this.props.navigation.setParams({adding: false})
            
           
-            };
+            
           }}
           mode="flat"
           keyboardType="phone-pad"/>
