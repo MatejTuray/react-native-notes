@@ -30,6 +30,11 @@ export default class DetailsAppBar extends React.Component {
         icon={"menu"}
         onPress={() => this.props.handleHideMenu()}
       />
+      <Appbar.Action
+      color="white"
+      icon={"color-lens"}
+      onPress={() => this.props.openModal()}
+    />
 
      
       </Appbar>

@@ -14,7 +14,7 @@ import {
 import { TextInput, TouchableRipple } from "react-native-paper";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { saveNote } from "../actions/notesActions";
+import { saveNote, cacheList, clearCacheList } from "../actions/notesActions";
 import moment from "moment";
 import AppBar from "./AppBar";
 import {
@@ -94,7 +94,7 @@ class CreateShoppingList extends Component {
       text: "",
       date: new Date(),
       title: "",
-      list: [],
+      list: this.props.cache.list,
       snackBarVisible: false,
       remind: false,
       reminderDate: "",
@@ -190,6 +190,7 @@ class CreateShoppingList extends Component {
       redirect: true
     });
     this.props.saveNote(payload);
+    this.props.clearCacheList()
   }
   _hideDateTimePicker = () =>
     this.setState({ openDateTime: false, remind: false });
@@ -273,6 +274,9 @@ class CreateShoppingList extends Component {
     } catch ({ code, message }) {
       console.warn("Cannot open date picker", message);
     }
+  }
+  componentWillUnmount(){
+    this.props.cacheList(this.state.list)
   }
 
   render() {
@@ -773,10 +777,11 @@ const styles = StyleSheet.create({
 const mapStateToProps = state => ({
   title: state.title,
   fab: state.fab,
+  cache: state.cache
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle }, dispatch);
+  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheList: cacheList, clearCacheList: clearCacheList }, dispatch);
 };
 
 export default connect(

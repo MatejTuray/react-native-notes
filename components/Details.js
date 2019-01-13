@@ -12,6 +12,7 @@ import {
   NetInfo,
   Alert,
   Keyboard,
+  Dimensions
  
 } from "react-native";
 import { connect } from "react-redux";
@@ -26,16 +27,18 @@ import {
   Divider,
   ProgressBar,
   Snackbar,
-  Chip
+  Chip,
+  Portal,
+  Modal,
 } from "react-native-paper";
 import Swipeout from "react-native-swipeout";
 import { FlatList, ScrollView } from "react-native-gesture-handler";
-import { updateNote } from "../actions/notesActions";
+import { updateNote, changeColor } from "../actions/notesActions";
 import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import { Linking } from "expo";
 import axios from "axios";
 const uuidv4 = require("uuid").v4
-import FabComponent from "./FabComponent"
+import { TriangleColorPicker } from "react-native-color-picker";
 import FABToggle from "../actions/FABActions";
 
 class Details extends Component {
@@ -318,6 +321,8 @@ class Details extends Component {
     
     
   }
+  _showModal = () => this.setState({ visible: true });
+  _hideModal = () => this.setState({ visible: false });
 
   render() {
     let swipeoutBtnsRight = [
@@ -534,6 +539,7 @@ class Details extends Component {
         <View style={styles.AppBarStyle}>
           <Animatable.View animation="bounceInLeft">
             <DetailsAppBar
+              openModal={this._showModal}
               totalPrice={this.state.totalPrice}
               handleShare={this.handleShare}
               handleHideMenu = {this.handleHideMenu}
@@ -558,7 +564,30 @@ class Details extends Component {
        color={this.props.note.color}
        style={styles.ProgressBarStyle}
      /></View> : undefined}
-  
+     <Portal>
+     <Modal
+       style={{
+         alignItems: "center",
+         flex: 1,
+         justifyContent: "center"
+       }}
+       visible={this.state.visible}
+       onDismiss={this._hideModal}
+     >
+       <View style={{ height: Dimensions.get("window").height / 2 }}>
+         <TriangleColorPicker
+           style={{ flex: 1 }}
+           oldColor={this.props.note.color}
+           onColorSelected={color => {
+             console.log(color);
+             this.props.navigation.setParams({ color: color });
+             this.props.changeColor(color)
+             this._hideModal();
+           }}
+         />
+       </View>
+     </Modal>
+   </Portal>
       </View>
     );
   }
@@ -674,7 +703,7 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ updateNote: updateNote, FABToggle: FABToggle }, dispatch);
+  return bindActionCreators({ updateNote: updateNote, FABToggle: FABToggle, changeColor: changeColor }, dispatch);
 };
 
 export default connect(

@@ -11,7 +11,7 @@ const persistConfig = {
     key: 'root',
     storage,        
     stateReconciler: hardSet,
-    blacklist: ["query","list", "selectedNote", "title", "date", "fab"]
+    blacklist: ["query","list", "selectedNote", "title", "date", "fab", "cache"]
   }
   
   

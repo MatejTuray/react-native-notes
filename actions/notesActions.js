@@ -46,6 +46,33 @@ const setArchive = (status, key) => {
         key: key
     }
 }
+const cacheText = (note) => {
+    return {
+        type: "CACHE_TEXTNOTE",
+        payload: note,
+    }
+}
+const cacheList = (list) => {
+    return {
+        type: "CACHE_LISTNOTE",
+        payload: list,
+    }
+}
+const clearCacheNote = () => {
+    return {
+        type: "CLEAR_CACHE_NOTE"
+    }
+}
+const clearCacheList = () => {
+    return {
+        type: "CLEAR_CACHE_LIST"
+    }
+}
+const changeColor = (color) => {
+    return {
+        type: "CHANGE_COLOR",
+        payload: color
+    }
+}
 
-
-export {saveNote, selectNote, updateNote, deleteNote, setTitle, toggleFavorites, setArchive}
+export {saveNote, selectNote, updateNote, deleteNote, setTitle, toggleFavorites, setArchive, cacheText, cacheList, clearCacheNote, clearCacheList, changeColor}

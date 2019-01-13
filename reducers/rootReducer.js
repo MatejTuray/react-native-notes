@@ -6,6 +6,7 @@ import filterReducer from "./filterReducer";
 import queryReducer from "./queryReducer";
 import dateReducer from "./dateReducer";
 import FABReducer from "./FABReducer";
+import cacheReducer from "./cacheReducer";
 
 
 
@@ -16,7 +17,8 @@ const rootReducer = combineReducers({
     filter: filterReducer,
     query: queryReducer,
     date: dateReducer,
-    fab: FABReducer
+    fab: FABReducer,
+    cache: cacheReducer
     
 })
 

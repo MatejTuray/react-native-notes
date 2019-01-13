@@ -11,7 +11,7 @@ import {
 import { TextInput } from "react-native-paper";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { saveNote } from "../actions/notesActions";
+import { saveNote, cacheText, clearCacheNote } from "../actions/notesActions";
 import moment from "moment";
 import AppBar from "./AppBar";
 import {
@@ -83,7 +83,7 @@ class CreateNote extends Component {
     this.handleSetHeader = this.handleSetHeader.bind(this);
     this.handleHideMenu = this.handleHideMenu.bind(this)
     this.state = {
-      text: "",
+      text: this.props.cache.text,
       date: new Date(),
       snackBarVisible: false,
       remind: false,
@@ -173,6 +173,7 @@ class CreateNote extends Component {
     });
     if (payload.title !== "" && payload.text !== "") {
       this.props.saveNote(payload);
+      this.props.clearCacheNote()
     }
   }
 
@@ -231,6 +232,9 @@ class CreateNote extends Component {
     } catch ({ code, message }) {
       console.warn("Cannot open date picker", message);
     }
+  }
+  componentWillUnmount(){
+    this.props.cacheText(this.state.text)
   }
 
   render() {
@@ -436,10 +440,11 @@ const styles = StyleSheet.create({
 const mapStateToProps = state => ({
   title: state.title,
   fab: state.fab,
+  cache: state.cache
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle }, dispatch);
+  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheText: cacheText, clearCacheNote: clearCacheNote }, dispatch);
 };
 
 export default connect(
