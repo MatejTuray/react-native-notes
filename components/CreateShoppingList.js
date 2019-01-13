@@ -1,5 +1,5 @@
 //TODO ERROR HANDLING EMPTY / VISIBLE
-
+//TODO SAVE STATE BETTER
 import React, { Component } from "react";
 import {
   View,
@@ -14,7 +14,7 @@ import {
 import { TextInput, TouchableRipple } from "react-native-paper";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { saveNote, cacheList, clearCacheList } from "../actions/notesActions";
+import { saveNote, cacheList, clearCacheList, setTitle } from "../actions/notesActions";
 import moment from "moment";
 import AppBar from "./AppBar";
 import {
@@ -38,6 +38,7 @@ const uuidv4 = require("uuid/v4");
 import Swipeout from "react-native-swipeout";
 import "moment/locale/sk";
 import FABToggle from "../actions/FABActions";
+import { HeaderBackButton } from 'react-navigation';
 class CreateShoppingList extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
@@ -60,7 +61,7 @@ class CreateShoppingList extends Component {
             setHeader={() => params.setHeader()}
           />
         ) : (
-          undefined
+          <HeaderBackButton tintColor="white" onPress={()=>{params.handleCache(); navigation.goBack()}}/>
         ),
       headerRight: (
         <MaterialHeaderButtons>
@@ -90,6 +91,7 @@ class CreateShoppingList extends Component {
     this.handleListItem = this.handleListItem.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
     this.handleHideMenu = this.handleHideMenu.bind(this)
+    this.handleCache = this.handleCache.bind(this)
     this.state = {
       text: "",
       date: new Date(),
@@ -110,7 +112,8 @@ class CreateShoppingList extends Component {
     this.props.navigation.setParams({
       editHeader: this.editHeader,
       setHeader: this.handleSetHeader,
-      saveNote: this.handleSaveNote
+      saveNote: this.handleSaveNote,
+      handleCache: this.handleCache
     });
     this.setState({
       key: uuidv4()
@@ -132,6 +135,9 @@ class CreateShoppingList extends Component {
 
   handleSetHeader() {
     this.props.navigation.setParams({ edit: false });
+  }
+  handleCache(){
+    this.props.cacheList(this.state.list)
   }
 
   handleSaveNote() {
@@ -191,6 +197,7 @@ class CreateShoppingList extends Component {
     });
     this.props.saveNote(payload);
     this.props.clearCacheList()
+    
   }
   _hideDateTimePicker = () =>
     this.setState({ openDateTime: false, remind: false });
@@ -275,9 +282,8 @@ class CreateShoppingList extends Component {
       console.warn("Cannot open date picker", message);
     }
   }
-  componentWillUnmount(){
-    this.props.cacheList(this.state.list)
-  }
+
+
 
   render() {
     let time = moment(this.state.time, "HH:MM");
@@ -654,7 +660,7 @@ class CreateShoppingList extends Component {
           onDismiss={() => {
             this.setState({ redirect: false });
             this.props.navigation.navigate("Home");
-          }}
+            this.props.setTitle("Bez názvu");}}
           style={styles.snackbarStyle}
           duration={1000}
         >
@@ -781,7 +787,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheList: cacheList, clearCacheList: clearCacheList }, dispatch);
+  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheList: cacheList, clearCacheList: clearCacheList, setTitle: setTitle }, dispatch);
 };
 
 export default connect(

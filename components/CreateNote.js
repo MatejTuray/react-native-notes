@@ -1,4 +1,5 @@
 //TODO ERROR HANDLING
+//TODO SAVE STATE BETTER
 
 import React, { Component } from "react";
 import {
@@ -11,7 +12,7 @@ import {
 import { TextInput } from "react-native-paper";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { saveNote, cacheText, clearCacheNote } from "../actions/notesActions";
+import { saveNote, cacheText, clearCacheNote, setTitle } from "../actions/notesActions";
 import moment from "moment";
 import AppBar from "./AppBar";
 import {
@@ -30,11 +31,12 @@ import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import EditableHeader from "./EditableHeader";
 import "moment/locale/sk";
 import FABToggle from "../actions/FABActions";
-
+import { HeaderBackButton } from 'react-navigation';
 const convert = require("color-convert");
 const uuidv4 = require("uuid/v4");
 
 class CreateNote extends Component {
+  
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
 
@@ -44,9 +46,7 @@ class CreateNote extends Component {
         backgroundColor: params && params.color ? `${params.color}` : "#1a72b4"
       },
       headerTintColor: "white",
-      headerTitleStyle: {
-        color: "white"
-      },
+      headerTitleStyle:  {color: "white"},
       headerLeft:
         params && params.edit ? (
           <EditableHeader
@@ -55,7 +55,7 @@ class CreateNote extends Component {
             setHeader={() => params.setHeader()}
           />
         ) : (
-          undefined
+          <HeaderBackButton tintColor="white" onPress={()=>{params.handleCache(); navigation.goBack()}}/>
         ),
       headerRight: (
         <MaterialHeaderButtons>
@@ -82,6 +82,7 @@ class CreateNote extends Component {
     this.editHeader = this.editHeader.bind(this);
     this.handleSetHeader = this.handleSetHeader.bind(this);
     this.handleHideMenu = this.handleHideMenu.bind(this)
+    this.handleCache = this.handleCache.bind(this)
     this.state = {
       text: this.props.cache.text,
       date: new Date(),
@@ -96,7 +97,8 @@ class CreateNote extends Component {
     this.props.navigation.setParams({
       editHeader: this.editHeader,
       setHeader: this.handleSetHeader,
-      saveNote: this.handleSaveNote
+      saveNote: this.handleSaveNote,
+      handleCache: this.handleCache
     });
     this.setState({
       key: uuidv4()
@@ -115,6 +117,9 @@ class CreateNote extends Component {
     if (prevProps.title !== this.props.title) {
       this.props.navigation.setParams({ titleText: this.props.title });
     }
+  }
+  handleCache(){
+    this.props.cacheText(this.state.text)
   }
 
   handleSetHeader() {
@@ -174,6 +179,7 @@ class CreateNote extends Component {
     if (payload.title !== "" && payload.text !== "") {
       this.props.saveNote(payload);
       this.props.clearCacheNote()
+      
     }
   }
 
@@ -233,9 +239,8 @@ class CreateNote extends Component {
       console.warn("Cannot open date picker", message);
     }
   }
-  componentWillUnmount(){
-    this.props.cacheText(this.state.text)
-  }
+  
+      
 
   render() {
     let time = moment(this.state.time, "HH:MM");
@@ -327,6 +332,7 @@ class CreateNote extends Component {
           onDismiss={() => {
             this.setState({ redirect: false });
             this.props.navigation.navigate("Home");
+            this.props.setTitle("Bez názvu");
           }}
           style={styles.snackbarStyle}
           duration={1000}
@@ -444,7 +450,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheText: cacheText, clearCacheNote: clearCacheNote }, dispatch);
+  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheText: cacheText, clearCacheNote: clearCacheNote, setTitle: setTitle }, dispatch);
 };
 
 export default connect(
