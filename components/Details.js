@@ -311,7 +311,7 @@ class Details extends Component {
     this.keyboardDidShowListener.remove();
     this.keyboardDidHideListener.remove();
     console.log("unmounting")
-    if (this.state.list.length >= 2){
+    if (this.state.list && this.state.list.length >= 2){
     this.handleUpdate()
     }
     else{

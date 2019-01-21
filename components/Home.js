@@ -240,6 +240,41 @@ class Home extends React.Component {
                 "Uložené",
                 `${this.state.itemData.title} bola úspešne uložená`
               );
+              if (this.state.itemData.remind === true) {
+                console.log("scheduling notification");
+                //TODO DESIGN NOTIF
+                const localNotification = {
+                  title: this.state.itemData.title,
+                  body: `Reminder for your note - ${moment(this.state.itemData.date).format(
+                    "DD/MM/YYYY, HH/mm"
+                  )}`, // (string) — body text of the notification.
+                  data: {
+                    key: this.state.itemData.key,
+                    color: this.state.itemData.color,
+                    title: this.state.itemData.title
+                  },
+                  // (optional) (object) — notification configuration specific to Android.
+                  android: {
+                    channelId: "reminders",
+                    sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
+                    icon:
+                      "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
+                    color: this.state.itemData.color, // (optional) (string) — color of the notification icon in notification drawer.
+                    priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+                    sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+                    vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+                  }
+                };
+          
+                const schedulingOptions = {
+                  time: Date.parse(this.state.itemData.reminderDate)
+                };
+          
+                Notifications.scheduleLocalNotificationAsync(
+                  localNotification,
+                  schedulingOptions
+                );
+              }
               this.setState({
                 fetching: false
               });
@@ -559,12 +594,12 @@ class Home extends React.Component {
           duration={2000}
         >
           {this.state.selectedTab !== 2
-            ? `Archived ${this.state.items} ${
-                this.state.items === 1 ? "item" : "items"
+            ? `V archíve ${this.state.items === 1 || this.state.items > 4 ? "je" : "sú"} ${this.state.items} ${
+                this.state.items === 1 ? "položka" : this.state.items < 5 ? "položky" : "položiek"
               }`
-            : `Removed ${this.state.items} ${
-                this.state.items === 1 ? "item" : "items"
-              } from archive`}
+            : `${this.state.items} ${
+                this.state.items === 1 ? "položka" : this.state.items < 5 ? "položky" : "položiek"
+              } ${this.state.items === 1 ? "bola vytiahnutá z archívu" : this.state.items < 5 ? "boli vytiahnuté z archívu" : "bolo vytiahnutých z archívu"}`}
         </Snackbar>
         <Snackbar
           visible={this.state.openDeleteSnack}
@@ -572,7 +607,7 @@ class Home extends React.Component {
             this.setState({ openDeleteSnack: false });
           }}
           action={{
-            label: "Undo",
+            label: "Späť",
             onPress: () => {
               for (let elem of this.state.undoable) {
                 store.dispatch(ActionCreators.undo());
@@ -586,8 +621,8 @@ class Home extends React.Component {
           }}
           duration={5000}
         >
-          {`Deleted ${this.state.items} ${
-            this.state.items === 1 ? "item" : "items"
+          {`${this.state.items === 1 ? "Vymazaná" : this.state.items < 5 ? "Vymazané" : "Vymazaných"} ${this.state.items} ${
+            this.state.items === 1 ? "položka" : this.state.items < 5 ? "položky" : "položiek"
           }`}
         </Snackbar>
         <Snackbar
@@ -603,7 +638,7 @@ class Home extends React.Component {
           }}
           duration={3000}
         >
-          This item is already archived
+          Táto položka sa už nachádza v archíve
         </Snackbar>
       </View>
     );

@@ -1,5 +1,4 @@
-//TODO ERROR HANDLING
-//TODO SAVE STATE BETTER
+
 
 import React, { Component } from "react";
 import {
@@ -22,7 +21,7 @@ import {
   Snackbar,
   Modal,
   Portal,
-  TouchableRipple
+  HelperText
 } from "react-native-paper";
 import DateTimePicker from "react-native-modal-datetime-picker";
 import { TriangleColorPicker } from "react-native-color-picker";
@@ -85,12 +84,13 @@ class CreateNote extends Component {
     this.handleCache = this.handleCache.bind(this)
     this.state = {
       text: this.props.cache.text,
-      date: new Date(),
+      date: this.props.cache.note_date,
       snackBarVisible: false,
-      remind: false,
-      reminderDate: "",
+      remind: this.props.cache.note_remind,
+      reminderDate: this.props.cache.note_reminderDate,
       editHeader: false,
-      color: "#1a72b4"
+      color: this.props.cache.note_color,
+      error: false,
     };
   }
   componentWillMount() {
@@ -119,13 +119,22 @@ class CreateNote extends Component {
     }
   }
   handleCache(){
-    this.props.cacheText(this.state.text)
+    let payload = {
+      text: this.state.text,
+      remind: this.state.remind,
+      date: this.state.date,
+      color: this.state.color,
+      reminderDate: this.state.reminderDate
+    }
+    
+    this.props.cacheText(payload)
   }
 
   handleSetHeader() {
     this.props.navigation.setParams({ edit: false });
   }
   handleSaveNote() {
+    if (this.state.text !== ""){
     if (this.state.remind === true) {
       console.log("scheduling notification");
       //TODO DESIGN NOTIF
@@ -174,12 +183,19 @@ class CreateNote extends Component {
     };
     console.log(payload);
     this.setState({
-      redirect: true
+      redirect: true,
+      error: false
     });
     if (payload.title !== "" && payload.text !== "") {
       this.props.saveNote(payload);
       this.props.clearCacheNote()
       
+    }
+    }
+    else{
+      this.setState({
+        error: true
+      })
     }
   }
 
@@ -254,7 +270,7 @@ class CreateNote extends Component {
               title={`${moment(this.state.date).format("LL")} / ${
                 this.state.time
                   ? this.state.time
-                  : moment(new Date()).format("HH:MM")
+                  : moment(this.props.cache.note_date).format("HH:mm")
               }`}
             />
             <IconButton
@@ -290,15 +306,22 @@ class CreateNote extends Component {
         </View>
 
         <View style={styles.inputStyle}>
+        <HelperText
+          type="error"
+          visible={this.state.error}
+        >
+          Prázdnu poznámku nemožno uložiť
+        </HelperText>
           <TextInput
             theme={{ colors: { primary: this.state.color } }}
             label="Poznámka"
             value={this.state.text}
-            onChangeText={text => this.setState({ text })}
+            onChangeText={text => this.setState({ text: text, error: text !== "" ? false : true })}
             mode="outlined"
             multiline={true}
             numberOfLines={12}
           />
+          
         </View>
 
         <View style={styles.AppBarStyle}>

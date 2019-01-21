@@ -1,5 +1,3 @@
-//TODO ERROR HANDLING EMPTY / VISIBLE
-//TODO SAVE STATE BETTER
 import React, { Component } from "react";
 import {
   View,
@@ -27,7 +25,8 @@ import {
   Portal,
   Chip,
   Divider,
-  Text
+  Text,
+  HelperText
 } from "react-native-paper";
 import DateTimePicker from "react-native-modal-datetime-picker";
 import { TriangleColorPicker } from "react-native-color-picker";
@@ -93,22 +92,24 @@ class CreateShoppingList extends Component {
     this.handleHideMenu = this.handleHideMenu.bind(this)
     this.handleCache = this.handleCache.bind(this)
     this.state = {
-      text: "",
-      date: new Date(),
+      text: this.props.cache.list_itemText,
+      date: this.props.cache.list_date,
       title: "",
       list: this.props.cache.list,
       snackBarVisible: false,
-      remind: false,
-      reminderDate: "",
-      color: "#1a72b4",
+      remind: this.props.cache.list_remind,
+      reminderDate: this.props.cache.list_reminderDate,
+      color: this.props.cache.list_color,
       editHeader: false,
       setPrice: false,
       selectedItem: {},
       editPrice: false,
-      selected: []
+      selected: [],
+      error: false
     };
   }
   componentWillMount() {
+    console.log(this.props.cache.list_date)
     this.props.navigation.setParams({
       editHeader: this.editHeader,
       setHeader: this.handleSetHeader,
@@ -137,10 +138,20 @@ class CreateShoppingList extends Component {
     this.props.navigation.setParams({ edit: false });
   }
   handleCache(){
-    this.props.cacheList(this.state.list)
-  }
+    console.log(this.state.date)
+    let payload = {
+      list: this.state.list,
+      remind: this.state.remind,
+      date: this.state.date,
+      color: this.state.color,
+      reminderDate: this.state.reminderDate,
+      listItemText: this.state.text
+    }
+    this.props.cacheList(payload)
+    }
 
   handleSaveNote() {
+    if (this.state.list.length !== 0) {
     if (this.state.remind === true) {
       console.log("scheduling notification");
       //TODO DESIGN NOTIF
@@ -193,10 +204,17 @@ class CreateShoppingList extends Component {
 
     console.log(payload);
     this.setState({
-      redirect: true
+      redirect: true,
+      error: false,
     });
     this.props.saveNote(payload);
     this.props.clearCacheList()
+  }
+  else{
+    this.setState({
+      error: true
+    })
+  }
     
   }
   _hideDateTimePicker = () =>
@@ -321,7 +339,7 @@ class CreateShoppingList extends Component {
               title={`${moment(this.state.date).format("LL")} / ${
                 this.state.time
                   ? this.state.time
-                  : moment(new Date()).format("HH:MM")
+                  : moment(this.props.cache.list_date).format("HH:mm")
               }`}
             />
             <IconButton
@@ -369,6 +387,7 @@ class CreateShoppingList extends Component {
             }}
             onSubmitEditing={() => {
               this.setState({
+                error: false,
                 list: this.state.list.concat({
                   text: this.state.text,
                   status: false,
@@ -387,6 +406,12 @@ class CreateShoppingList extends Component {
             }}
             mode="flat"
           />
+          <HelperText
+          type="error"
+          visible={this.state.error}
+          >
+          Pridajte prosím aspoň jednu položku do zoznamu
+          </HelperText>
         </View>
 
         <ScrollView style={styles.scrollStyle}>

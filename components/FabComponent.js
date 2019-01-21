@@ -36,7 +36,8 @@ export class FabComponent extends React.Component {
               onPress: () =>
                 this.props.navigation.navigate("CreateNote", {
                   edit: false,
-                  titleText: this.props.title
+                  titleText: this.props.title,
+                  color: this.props.cache.note_color
                 })
             },
             {
@@ -45,11 +46,13 @@ export class FabComponent extends React.Component {
               style: {
                 backgroundColor: "#B41A34"
               },
-              onPress: () =>
+              onPress: () => {
                 this.props.navigation.navigate("CreateShoppingList", {
                   edit: false,
-                  titleText: this.props.title
-                })
+                  titleText: this.props.title,
+                  color: this.props.cache.list_color
+                });
+                console.log(this.props.cache.list_color)}
             },
             {
               icon: "book",
@@ -112,7 +115,8 @@ const styles = StyleSheet.create({
 const mapStateToProps = state => {
   return {
       fab: state.fab,
-      title: state.title
+      title: state.title,
+      cache: state.cache
   };
 };
 const mapDispatchToProps = dispatch => {

@@ -46,16 +46,16 @@ const setArchive = (status, key) => {
         key: key
     }
 }
-const cacheText = (note) => {
+const cacheText = (obj) => {
     return {
         type: "CACHE_TEXTNOTE",
-        payload: note,
+        payload: obj,
     }
 }
-const cacheList = (list) => {
+const cacheList = (obj) => {
     return {
         type: "CACHE_LISTNOTE",
-        payload: list,
+        payload: obj,
     }
 }
 const clearCacheNote = () => {
