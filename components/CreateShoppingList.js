@@ -280,7 +280,7 @@ class CreateShoppingList extends Component {
             is24Hour: true // Will display '2 PM'
           });
           if (action !== TimePickerAndroid.dismissedAction) {
-            if (minute > 10) {
+            if (minute > 9) {
               timeString = `${hour}:${minute}`;
             } else {
               timeString = `${hour}:0${minute}`;
@@ -304,8 +304,7 @@ class CreateShoppingList extends Component {
 
 
   render() {
-    let time = moment(this.state.time, "HH:MM");
-    time = moment(time).format("HH:MM");
+ 
     let swipeoutBtnsRight = [
       {
         component: (

@@ -82,6 +82,7 @@ class CreateNote extends Component {
     this.handleSetHeader = this.handleSetHeader.bind(this);
     this.handleHideMenu = this.handleHideMenu.bind(this)
     this.handleCache = this.handleCache.bind(this)
+    
     this.state = {
       text: this.props.cache.text,
       date: this.props.cache.note_date,
@@ -199,6 +200,7 @@ class CreateNote extends Component {
     }
   }
 
+
   _hideDateTimePicker = () =>
     this.setState({ openDateTime: false, remind: false });
 
@@ -236,7 +238,7 @@ class CreateNote extends Component {
             is24Hour: true
           });
           if (action !== TimePickerAndroid.dismissedAction) {
-            if (minute > 10) {
+            if (minute > 9) {
               timeString = `${hour}:${minute}`;
             } else {
               timeString = `${hour}:0${minute}`;
@@ -259,8 +261,8 @@ class CreateNote extends Component {
       
 
   render() {
-    let time = moment(this.state.time, "HH:MM");
-    time = moment(time).format("HH:MM");
+       
+
     return (
       <View style={styles.viewStyle}>
         <View style={styles.dateStyle}>
@@ -320,6 +322,7 @@ class CreateNote extends Component {
             mode="outlined"
             multiline={true}
             numberOfLines={12}
+            blurOnSubmit={true}
           />
           
         </View>
@@ -332,6 +335,7 @@ class CreateNote extends Component {
             handleSaveNote={this.handleSaveNote}
             color={this.state.color}
             openModal={this._showModal}
+           
           />
         </View>
         <DateTimePicker

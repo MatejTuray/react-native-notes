@@ -244,6 +244,10 @@ class Details extends Component {
           }
         }
       }
+      else{
+        Alert.alert("Zdieľanie zlyhalo", "Skontrolujte prosím pripojenie k internetu")
+      }
+    
       
     } catch (error) {
       alert(error.message);
@@ -552,8 +556,8 @@ class Details extends Component {
             />
           </Animatable.View>
         </View>    
-        {this.state.list && this.state.adding === false && this.state.priceAmount === false?         
-      <View style={styles.progressStyle}>
+        {this.state.list && this.state.list.length > 0 && this.state.adding === false && this.state.priceAmount === false?         
+      <View style={styles.progressStyle}>      
       <ProgressBar
        progress={
          this.state.list

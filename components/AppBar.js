@@ -39,11 +39,13 @@ export default class AppBar extends React.Component {
           icon="date-range"
           onPress={() => this.props.openDatePicker()}
         />
+      
         <Appbar.Action
         color="white"
         icon={"menu"}
         onPress={() => this.props.handleHideMenu()}
       />
+     
         {this.props.totalPrice ? (
           <Appbar.Content
             title={`${
