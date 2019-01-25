@@ -67,7 +67,7 @@ class CreateNote extends Component {
           ) : (
             undefined
           )}
-          <Item title="Uložiť" iconName="" onPress={() => params.saveNote()} />
+          <Item title="Uložiť" iconName="" onPress={() => params.saveNote()} disabled={params && params.redirect ? true : false}/>
         </MaterialHeaderButtons>
       )
     };
@@ -99,7 +99,8 @@ class CreateNote extends Component {
       editHeader: this.editHeader,
       setHeader: this.handleSetHeader,
       saveNote: this.handleSaveNote,
-      handleCache: this.handleCache
+      handleCache: this.handleCache,
+      redirect: false,
     });
     this.setState({
       key: uuidv4()
@@ -187,10 +188,11 @@ class CreateNote extends Component {
       redirect: true,
       error: false
     });
+    
     if (payload.title !== "" && payload.text !== "") {
       this.props.saveNote(payload);
       this.props.clearCacheNote()
-      
+      this.props.navigation.setParams({redirect: true})
     }
     }
     else{
@@ -358,6 +360,7 @@ class CreateNote extends Component {
           visible={this.state.redirect}
           onDismiss={() => {
             this.setState({ redirect: false });
+            
             this.props.navigation.navigate("Home");
             this.props.setTitle("Bez názvu");
           }}

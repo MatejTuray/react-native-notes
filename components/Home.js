@@ -49,6 +49,7 @@ import { Notifications, Linking } from "expo";
 import axios from "axios";
 import Spinner from "react-native-loading-spinner-overlay";
 import "moment/locale/sk";
+import FABToggle from "../actions/FABActions";
 const uuidv4 = require("uuid/v4");
 
 class Home extends React.Component {
@@ -85,6 +86,12 @@ class Home extends React.Component {
             undefined
           )}
           <Item
+          key={uuidv4()}
+          title="menu"
+          iconName="menu"
+          onPress={() => params.toggleMenu()}
+        />
+          <Item
             key={uuidv4()}
             title="date-range"
             iconName="date-range"
@@ -120,7 +127,8 @@ class Home extends React.Component {
   componentWillMount() {
     this.props.navigation.setParams({
       datePicker: this.datePicker,
-      clearDate: this.clearDate
+      clearDate: this.clearDate,
+      toggleMenu: this.props.FABToggle,
     });
     this.props.setFilter(this.state.selectedTab);
     this.props.navigation.setParams({ len: 0 });
@@ -704,7 +712,8 @@ const mapDispatchToProps = dispatch => {
       setFilter: setFilter,
       setQuery: setQuery,
       saveNote: saveNote,
-      handleDate: handleDate
+      handleDate: handleDate,
+      FABToggle: FABToggle,
     },
     dispatch
   );

@@ -6,7 +6,7 @@
     "privacy": "public",
     "sdkVersion": "31.0.0",
     "platforms": ["android"],
-    "version": "1.0.0",
+    "version": "0.0.3",
     "orientation": "portrait",
     "icon": "./assets/sticky_note.png",
     "scheme": "notes",
@@ -29,6 +29,8 @@
       "supportsTablet": true
     },
     "android":{
+     "versionCode": 3,    
+               
     "permissions": [
       "VIBRATE",
       "NOTIFICATIONS",

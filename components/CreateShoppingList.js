@@ -73,7 +73,7 @@ class CreateShoppingList extends Component {
           ) : (
             undefined
           )}
-          <Item title="uložiť" iconName="" onPress={() => params.saveNote()} />
+          <Item title="uložiť" iconName="" onPress={() => params.saveNote()} disabled={params && params.redirect ? true : false}/>
         </MaterialHeaderButtons>
       )
     };
@@ -114,7 +114,8 @@ class CreateShoppingList extends Component {
       editHeader: this.editHeader,
       setHeader: this.handleSetHeader,
       saveNote: this.handleSaveNote,
-      handleCache: this.handleCache
+      handleCache: this.handleCache,
+      redirect: false,
     });
     this.setState({
       key: uuidv4()
@@ -209,6 +210,7 @@ class CreateShoppingList extends Component {
     });
     this.props.saveNote(payload);
     this.props.clearCacheList()
+    this.props.navigation.setParams({redirect: true})
   }
   else{
     this.setState({

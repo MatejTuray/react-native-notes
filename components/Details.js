@@ -58,14 +58,18 @@ class Details extends Component {
         color: "white"
       },
       headerRight: (
+       
         <MaterialHeaderButtons>
-          <Item
+        {params.list ? 
+            <Item
             title="UPDATE"
             iconSize={30}
             iconName={params.adding ? "done" : "playlist-add"}
             onPress={() => params.toggleAdd()}
           />
+          : undefined}
         </MaterialHeaderButtons>
+        
       )
     };
   };
@@ -97,7 +101,8 @@ class Details extends Component {
     this.props.navigation.setParams({
       handleUpdate: this.handleUpdate,
       toggleAdd: this.toggleAdd,
-      adding: false
+      adding: false,
+      list: this.props.note.list && this.props.note.list.length > 0 ? true : false
     });
   }
   componentDidMount() {
@@ -270,7 +275,9 @@ class Details extends Component {
       this.props.updateNote(payload, this.props.note.key);
       
     } else {
-      this.props.updateNote({ text: this.state.text }, this.props.note.key);
+      let payload = this.props.note
+      payload.text = this.state.text
+      this.props.updateNote(payload, this.props.note.key);
     }
    
   }
@@ -317,6 +324,9 @@ class Details extends Component {
     console.log("unmounting")
     if (this.state.list && this.state.list.length >= 2){
     this.handleUpdate()
+    }
+    else if (this.state.text !== "" && this.props.note.text !== ""){
+      this.handleUpdate()
     }
     else{
       console.log("error?")
@@ -445,10 +455,12 @@ class Details extends Component {
             style={styles.textStyle}
             label="Poznámka"
             value={this.state.text}
+            blurOnSubmit={true}
             onChangeText={text => this.setState({ text: text })}
             mode="outlined"
             multiline={true}
             numberOfLines={12}
+            onSubmitEditing={() => this.handleUpdate()}
           />
         ) : <ScrollView style={ styles.scrollStyle}>
             <FlatList

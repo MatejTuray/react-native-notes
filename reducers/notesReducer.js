@@ -5,18 +5,13 @@ const notesReducer = (state = [], action) => {
             return [...state, action.payload]
         case "UPDATE_NOTE":
         const updatedItems = state.map(item => {
-            if(item.key === action.key){
-                console.log(action.payload)
-                if (action.payload.text) {
-              return { ...item, ...action.payload  }
-                }
-                else{
-                    return action.payload
+            if(item.key === action.key){                           
+                return action.payload
                    
                 }
-            }
-            return item
-          })
+                return item 
+            })
+                     
           return updatedItems
         case "TOGGLE_FAVORITES":
         const updated = state.map(item => {
