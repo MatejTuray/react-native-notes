@@ -12,7 +12,12 @@ import {
 import { TextInput, TouchableRipple } from "react-native-paper";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { saveNote, cacheList, clearCacheList, setTitle } from "../actions/notesActions";
+import {
+  saveNote,
+  cacheList,
+  clearCacheList,
+  setTitle
+} from "../actions/notesActions";
 import moment from "moment";
 import AppBar from "./AppBar";
 import {
@@ -37,7 +42,8 @@ const uuidv4 = require("uuid/v4");
 import Swipeout from "react-native-swipeout";
 import "moment/locale/sk";
 import FABToggle from "../actions/FABActions";
-import { HeaderBackButton } from 'react-navigation';
+import { HeaderBackButton } from "react-navigation";
+import { copilot, CopilotStep } from "@okgrow/react-native-copilot";
 class CreateShoppingList extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
@@ -60,7 +66,13 @@ class CreateShoppingList extends Component {
             setHeader={() => params.setHeader()}
           />
         ) : (
-          <HeaderBackButton tintColor="white" onPress={()=>{params.handleCache(); navigation.goBack()}}/>
+          <HeaderBackButton
+            tintColor="white"
+            onPress={() => {
+              params.handleCache();
+              navigation.goBack();
+            }}
+          />
         ),
       headerRight: (
         <MaterialHeaderButtons>
@@ -73,7 +85,17 @@ class CreateShoppingList extends Component {
           ) : (
             undefined
           )}
-          <Item title="uložiť" iconName="" onPress={() => params.saveNote()} disabled={params && params.redirect ? true : false}/>
+          <Item
+            title="Pomoc"
+            iconName="help-outline"
+            onPress={() => params.help()}
+          />
+          <Item
+            title="uložiť"
+            iconName=""
+            onPress={() => params.saveNote()}
+            disabled={params && params.redirect ? true : false}
+          />
         </MaterialHeaderButtons>
       )
     };
@@ -89,8 +111,9 @@ class CreateShoppingList extends Component {
     this.handleCheck = this.handleCheck.bind(this);
     this.handleListItem = this.handleListItem.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
-    this.handleHideMenu = this.handleHideMenu.bind(this)
-    this.handleCache = this.handleCache.bind(this)
+    this.handleHideMenu = this.handleHideMenu.bind(this);
+    this.handleCache = this.handleCache.bind(this);
+    this.help = this.help.bind(this);
     this.state = {
       text: this.props.cache.list_itemText,
       date: this.props.cache.list_date,
@@ -105,17 +128,19 @@ class CreateShoppingList extends Component {
       selectedItem: {},
       editPrice: false,
       selected: [],
-      error: false
+      error: false,
+      renderBack: true
     };
   }
   componentWillMount() {
-    console.log(this.props.cache.list_date)
+    console.log(this.props.cache.list_date);
     this.props.navigation.setParams({
       editHeader: this.editHeader,
       setHeader: this.handleSetHeader,
       saveNote: this.handleSaveNote,
       handleCache: this.handleCache,
       redirect: false,
+      help: this.help
     });
     this.setState({
       key: uuidv4()
@@ -126,20 +151,31 @@ class CreateShoppingList extends Component {
 
     this.props.navigation.setParams({ edit: !edit });
   }
+  componentDidMount() {
+    this.props.copilotEvents.on("stop", () => {
+      this.setState({
+        renderBack: true
+      });
+    });
+  }
   componentDidUpdate(prevProps) {
     if (prevProps.title !== this.props.title) {
       this.props.navigation.setParams({ titleText: this.props.title });
       this.props.navigation.setParams({ titleText: this.props.title });
     }
   }
+  componentWillUnmount() {
+    this.props.copilotEvents.off("stop");
+  }
+
   _showModal = () => this.setState({ visible: true });
   _hideModal = () => this.setState({ visible: false });
 
   handleSetHeader() {
     this.props.navigation.setParams({ edit: false });
   }
-  handleCache(){
-    console.log(this.state.date)
+  handleCache() {
+    console.log(this.state.date);
     let payload = {
       list: this.state.list,
       remind: this.state.remind,
@@ -147,77 +183,75 @@ class CreateShoppingList extends Component {
       color: this.state.color,
       reminderDate: this.state.reminderDate,
       listItemText: this.state.text
-    }
-    this.props.cacheList(payload)
-    }
+    };
+    this.props.cacheList(payload);
+  }
 
   handleSaveNote() {
     if (this.state.list.length !== 0) {
-    if (this.state.remind === true) {
-      console.log("scheduling notification");
-      //TODO DESIGN NOTIF
-      const localNotification = {
+      if (this.state.remind === true) {
+        console.log("scheduling notification");
+        //TODO DESIGN NOTIF
+        const localNotification = {
+          title: this.props.title,
+          body: `Pripomienka Vášho zoznamu - ${moment(this.state.date).format(
+            "DD/MM/YYYY, time: HH:mm"
+          )}`, // (string) — body text of the notification.
+          data: {
+            key: this.state.key,
+            color: this.state.color,
+            title: this.props.title
+          },
+          // (optional) (object) — notification configuration specific to Android.
+          android: {
+            sound: true,
+            channelId: "reminders", // (optional) (boolean) — if true, play a sound. Default: false.
+            //icon (optional) (string) — URL of icon to display in notification drawer.
+            //color (optional) (string) — color of the notification icon in notification drawer.
+            priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+            sticky: false, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+            vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+          }
+        };
+
+        const schedulingOptions = {
+          time: Date.parse(this.state.reminderDate)
+        };
+
+        Notifications.scheduleLocalNotificationAsync(
+          localNotification,
+          schedulingOptions
+        );
+      }
+
+      let payload = {
+        key: this.state.key,
+        date: Date.parse(this.state.date),
         title: this.props.title,
-        body: `Reminder for your list - ${moment(this.state.date).format(
-          "DD/MM/YYYY, time: HH/mm"
-        )}`, // (string) — body text of the notification.
-        data: {
-          key: this.state.key,
-          color: this.state.color,
-          title: this.props.title
-        },
-        // (optional) (object) — notification configuration specific to Android.
-        android: {
-          sound: true,
-          channelId: "reminders", // (optional) (boolean) — if true, play a sound. Default: false.
-          //icon (optional) (string) — URL of icon to display in notification drawer.
-          //color (optional) (string) — color of the notification icon in notification drawer.
-          priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
-          sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
-          vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
-        }
+        list: this.state.list,
+        remind: this.state.remind,
+        reminderDate: this.state.reminderDate,
+        color: this.state.color,
+        star: false,
+        archive: false,
+        totalPrice: this.state.list
+          .map(item => item.price * item.value)
+          .reduce((p, c) => p + c)
       };
 
-      const schedulingOptions = {
-        time: Date.parse(this.state.reminderDate)
-      };
-
-      Notifications.scheduleLocalNotificationAsync(
-        localNotification,
-        schedulingOptions
-      );
+      console.log(payload);
+      this.setState({
+        redirect: true,
+        error: false
+      });
+      this.props.saveNote(payload);
+      this.props.clearCacheList();
+      this.props.navigation.setParams({ redirect: true });
+    } else {
+      this.setState({
+        error: true
+      });
     }
-
-    let payload = {
-      key: this.state.key,
-      date: Date.parse(this.state.date),
-      title: this.props.title,
-      list: this.state.list,
-      remind: this.state.remind,
-      reminderDate: this.state.reminderDate,
-      color: this.state.color,
-      star: false,
-      archive: false,
-      totalPrice: this.state.list
-        .map(item => item.price * item.value)
-        .reduce((p, c) => p + c)
-    };
-
-    console.log(payload);
-    this.setState({
-      redirect: true,
-      error: false,
-    });
-    this.props.saveNote(payload);
-    this.props.clearCacheList()
-    this.props.navigation.setParams({redirect: true})
-  }
-  else{
-    this.setState({
-      error: true
-    })
-  }
-    
   }
   _hideDateTimePicker = () =>
     this.setState({ openDateTime: false, remind: false });
@@ -258,8 +292,8 @@ class CreateShoppingList extends Component {
       selectedItem: item
     });
   }
-  handleHideMenu(){
-    this.props.FABToggle()
+  handleHideMenu() {
+    this.props.FABToggle();
   }
   async datePicker() {
     try {
@@ -302,11 +336,13 @@ class CreateShoppingList extends Component {
       console.warn("Cannot open date picker", message);
     }
   }
-
-
-
+  help() {
+    this.setState({
+      renderBack: false
+    });
+    this.props.start();
+  }
   render() {
- 
     let swipeoutBtnsRight = [
       {
         component: (
@@ -331,50 +367,73 @@ class CreateShoppingList extends Component {
         type: "delete"
       }
     ];
-    return (
-      <View style={styles.viewStyle}>
-        <View style={styles.dateStyle}>
-          <View style={styles.dateEditStyle}>
-            <List.Section
-              style={styles.textStyle}
-              title={`${moment(this.state.date).format("LL")} / ${
-                this.state.time
-                  ? this.state.time
-                  : moment(this.props.cache.list_date).format("HH:mm")
-              }`}
-            />
-            <IconButton
-              style={styles.iconStyle}
-              icon="edit"
-              size={20}
-              onPress={() => this.datePicker()}
-            />
-          </View>
-
-          <View style={styles.remindStyle}>
-            <IconButton
-              style={styles.remindIconStyle}
-              color={this.state.remind ? "green" : "black"}
-              icon="notifications"
-              size={20}
-              onPress={() =>
-                this.setState({ remind: true, openDateTime: true })
-              }
-            />
-
-            <Switch
-              value={this.state.remind}
-              color={this.state.color}
-              onValueChange={() => {
-                this.setState({
-                  remind: !this.state.remind,
-                  openDateTime: true
-                });
-              }}
-            />
-          </View>
+    const CopilotDate = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.dateEditStyle}>
+          <List.Section
+            style={styles.textStyle}
+            title={`${moment(this.state.date).format("LL")} / ${
+              this.state.time
+                ? this.state.time
+                : moment(this.props.cache.note_date).format("HH:mm")
+            }`}
+          />
+          <IconButton
+            style={styles.iconStyle}
+            icon="edit"
+            size={20}
+            onPress={() => this.datePicker()}
+          />
         </View>
-        <View style={styles.inputStyle}>
+      );
+    };
+    const CopilotReminder = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.remindStyle}>
+          <IconButton
+            style={styles.remindIconStyle}
+            color={this.state.remind ? "green" : "black"}
+            icon="notifications"
+            size={20}
+            onPress={() => this.setState({ remind: true, openDateTime: true })}
+          />
+
+          <Switch
+            value={this.state.remind}
+            color={this.state.color}
+            onValueChange={() => {
+              this.setState({
+                remind: !this.state.remind,
+                openDateTime: true
+              });
+            }}
+          />
+        </View>
+      );
+    };
+    const CopilotAppBar = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.AppBarStyle}>
+          <AppBar
+            handleHideMenu={this.handleHideMenu}
+            fab={this.props.fab}
+            color={this.state.color}
+            openDatePicker={this.datePicker}
+            handleSaveNote={this.handleSaveNote}
+            openModal={this._showModal}
+            handleDelete={this.handleDelete}
+            totalPrice={
+              this.state.list !== []
+                ? this.state.list.map(item => item.value * item.price)
+                : 0
+            }
+          />
+        </View>
+      );
+    };
+    const CopilotInput = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.inputStyle}>
           <TextInput
             theme={{ colors: { primary: this.state.color } }}
             label="Položka"
@@ -407,14 +466,77 @@ class CreateShoppingList extends Component {
             }}
             mode="flat"
           />
-          <HelperText
-          type="error"
-          visible={this.state.error}
-          >
-          Pridajte prosím aspoň jednu položku do zoznamu
+          <HelperText type="error" visible={this.state.error}>
+            Pridajte prosím aspoň jednu položku do zoznamu
           </HelperText>
         </View>
-
+      );
+    };
+    return (
+      <View style={styles.viewStyle}>
+        <View style={styles.dateStyle}>
+          <CopilotStep
+            text="Tu si môžete nastaviť dátum poznámky"
+            order={1}
+            name="date"
+          >
+            <CopilotDate />
+          </CopilotStep>
+          <CopilotStep
+            text="Nastavte pripomienku a dátum pripomienky"
+            order={2}
+            name="remind"
+          >
+            <CopilotReminder />
+          </CopilotStep>
+        </View>
+        {!this.state.renderBack ? (
+          <CopilotStep
+            text="Sem môžete napísať názov položky, po pridaní do zoznamu možno nastaviť cenu a počet kusov"
+            order={3}
+            name="input"
+          >
+            <CopilotInput />
+          </CopilotStep>
+        ) : (
+          <View style={styles.inputStyle}>
+            <TextInput
+              theme={{ colors: { primary: this.state.color } }}
+              label="Položka"
+              value={this.state.text}
+              style={{ backgroundColor: "transparent" }}
+              onChangeText={text => {
+                this.setState({ text });
+                this.setState({
+                  expanded: true
+                });
+              }}
+              onSubmitEditing={() => {
+                this.setState({
+                  error: false,
+                  list: this.state.list.concat({
+                    text: this.state.text,
+                    status: false,
+                    editing: false,
+                    editValue: false,
+                    value: 1,
+                    price: 0,
+                    selected: false,
+                    key: uuidv4()
+                  })
+                });
+                console.log(this.state.list);
+                this.setState({
+                  text: ""
+                });
+              }}
+              mode="flat"
+            />
+            <HelperText type="error" visible={this.state.error}>
+              Pridajte prosím aspoň jednu položku do zoznamu
+            </HelperText>
+          </View>
+        )}
         <ScrollView style={styles.scrollStyle}>
           <FlatList
             data={this.state.list}
@@ -648,23 +770,14 @@ class CreateShoppingList extends Component {
             )}
           />
         </ScrollView>
+        <CopilotStep
+          text="Tu môžete zvoliť zafarbenie poznámky, dátum a vypnúť resp. zapnúť menu, dlhým stlačením položky v zozname a stlačením ikony koša ju odstránite zo zoznamu"
+          order={4}
+          name="appbar"
+        >
+          <CopilotAppBar />
+        </CopilotStep>
 
-        <View style={styles.AppBarStyle}>
-          <AppBar
-          handleHideMenu = {this.handleHideMenu}
-          fab = {this.props.fab}
-            color={this.state.color}
-            openDatePicker={this.datePicker}
-            handleSaveNote={this.handleSaveNote}
-            openModal={this._showModal}
-            handleDelete={this.handleDelete}
-            totalPrice={
-              this.state.list !== []
-                ? this.state.list.map(item => item.value * item.price)
-                : 0
-            }
-          />
-        </View>
         <DateTimePicker
           isVisible={this.state.remind && this.state.openDateTime}
           onConfirm={this._handleDatePicked}
@@ -686,7 +799,8 @@ class CreateShoppingList extends Component {
           onDismiss={() => {
             this.setState({ redirect: false });
             this.props.navigation.navigate("Home");
-            this.props.setTitle("Bez názvu");}}
+            this.props.setTitle("Bez názvu");
+          }}
           style={styles.snackbarStyle}
           duration={1000}
         >
@@ -813,10 +927,25 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheList: cacheList, clearCacheList: clearCacheList, setTitle: setTitle }, dispatch);
+  return bindActionCreators(
+    {
+      saveNote: saveNote,
+      FABToggle: FABToggle,
+      cacheList: cacheList,
+      clearCacheList: clearCacheList,
+      setTitle: setTitle
+    },
+    dispatch
+  );
 };
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(CreateShoppingList);
+)(
+  copilot({
+    overlay: "svg", // or 'view'
+    animated: true,
+    verticalOffset: 100 // or false
+  })(CreateShoppingList)
+);

@@ -51,7 +51,7 @@ import Spinner from "react-native-loading-spinner-overlay";
 import "moment/locale/sk";
 import FABToggle from "../actions/FABActions";
 const uuidv4 = require("uuid/v4");
-
+import { copilot, CopilotStep } from "@okgrow/react-native-copilot";
 class Home extends React.Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
@@ -86,16 +86,21 @@ class Home extends React.Component {
             undefined
           )}
           <Item
-          key={uuidv4()}
-          title="menu"
-          iconName="menu"
-          onPress={() => params.toggleMenu()}
-        />
+            key={uuidv4()}
+            title="menu"
+            iconName="menu"
+            onPress={() => params.toggleMenu()}
+          />
           <Item
             key={uuidv4()}
             title="date-range"
             iconName="date-range"
             onPress={() => params.datePicker()}
+          />
+          <Item
+            title="Pomoc"
+            iconName="help-outline"
+            onPress={() => params.help()}
           />
         </MaterialHeaderButtons>
       )
@@ -112,6 +117,7 @@ class Home extends React.Component {
     this.onSwipe = this.onSwipe.bind(this);
     this.handleDataCheck = this.handleDataCheck.bind(this);
     this.clearDate = this.clearDate.bind(this);
+    this.help = this.help.bind(this);
     this.state = {
       text: "",
       title: "",
@@ -121,7 +127,8 @@ class Home extends React.Component {
       list: true,
       gestureName: "none",
       fetching: false,
-      date: ""
+      date: "",
+      renderBack: true
     };
   }
   componentWillMount() {
@@ -129,12 +136,18 @@ class Home extends React.Component {
       datePicker: this.datePicker,
       clearDate: this.clearDate,
       toggleMenu: this.props.FABToggle,
+      help: this.help
     });
     this.props.setFilter(this.state.selectedTab);
     this.props.navigation.setParams({ len: 0 });
   }
   componentDidMount() {
-    store.dispatch(ActionCreators.clearHistory())
+    this.props.copilotEvents.on("stop", () => {
+      this.setState({
+        renderBack: true
+      });
+    });
+    store.dispatch(ActionCreators.clearHistory());
     console.log(this.props);
     NetInfo.getConnectionInfo().then(connectionInfo => {
       console.log(
@@ -197,6 +210,12 @@ class Home extends React.Component {
       date: ""
     });
   }
+  help() {
+    this.setState({
+      renderBack: false
+    });
+    this.props.start();
+  }
   _handleUrl = url => {
     this.setState({
       fetching: true
@@ -253,9 +272,9 @@ class Home extends React.Component {
                 //TODO DESIGN NOTIF
                 const localNotification = {
                   title: this.state.itemData.title,
-                  body: `Reminder for your note - ${moment(this.state.itemData.date).format(
-                    "DD/MM/YYYY, HH/mm"
-                  )}`, // (string) — body text of the notification.
+                  body: `Reminder for your note - ${moment(
+                    this.state.itemData.date
+                  ).format("DD/MM/YYYY, HH/mm")}`, // (string) — body text of the notification.
                   data: {
                     key: this.state.itemData.key,
                     color: this.state.itemData.color,
@@ -273,11 +292,11 @@ class Home extends React.Component {
                     vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
                   }
                 };
-          
+
                 const schedulingOptions = {
                   time: Date.parse(this.state.itemData.reminderDate)
                 };
-          
+
                 Notifications.scheduleLocalNotificationAsync(
                   localNotification,
                   schedulingOptions
@@ -455,55 +474,33 @@ class Home extends React.Component {
 
   render() {
     const dateParam = this.props.navigation.getParam("date");
-    return (
-      <View style={styles.container}>
-        <Spinner
-          visible={this.state.loading}
-          textContent={"Fetching items..."}
-          textStyle={{ color: "white" }}
-        />
-        <GestureRecognizer
-          onSwipe={(direction, state) => this.onSwipe(direction, state)}
-          style={{
-            flex: 1,
-            backgroundColor: this.state.backgroundColor
-          }}
-        >
-          <SafeAreaView>
-            <MaterialTabs
-              items={["Všetky", "Obľubené", "Archív"]}
-              selectedIndex={this.state.selectedTab}
-              onChange={this.setTab}
-              barColor={
-                this.state.selected.length > 0 && this.state.selected !== []
-                  ? "grey"
-                  : "#1a72b4"
-              }
-              indicatorColor="white"
-              activeTextColor="white"
-            />
-          </SafeAreaView>
-          <View style={styles.headerStyle}>
-            <Searchbar
-              placeholder="Vyhľadať"
-              onChangeText={query => {
-                this.setState({ firstQuery: query });
-                this.props.setQuery(query);
-              }}
-              onIconPress={query => {
-                this.setState({ firstQuery: query });
-                this.props.setQuery(query);
-              }}
-              value={this.state.firstQuery}
-            />
-            {/* <Text style={styles.textStyle}>Your notes for {moment(this.state.date).format("LL")} </Text> */}
-          </View>
+    const CopilotTabs = ({ copilot }) => {
+      return (
+        <SafeAreaView {...copilot}>
+          <MaterialTabs
+            items={["Všetky", "Obľubené", "Archív"]}
+            selectedIndex={this.state.selectedTab}
+            onChange={this.setTab}
+            barColor={
+              this.state.selected.length > 0 && this.state.selected !== []
+                ? "grey"
+                : "#1a72b4"
+            }
+            indicatorColor="white"
+            activeTextColor="white"
+          />
+        </SafeAreaView>
+      );
+    };
 
+    const CopilotList = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.copilot}>
           <ScrollView style={styles.scrollStyle}>
             <FlatList
               data={this.handleDataCheck()}
               renderItem={({ item }) => (
-                <Animatable.View animation="slideInLeft">
+                <View>
                   <List.Item
                     key={item.key}
                     title={item.title}
@@ -576,14 +573,166 @@ class Home extends React.Component {
                     )}
                   />
                   <Divider />
-                </Animatable.View>
+                </View>
               )}
             />
           </ScrollView>
+        </View>
+      );
+    };
+
+    return (
+      <View style={styles.container}>
+        <Spinner
+          visible={this.state.loading}
+          textContent={"Fetching items..."}
+          textStyle={{ color: "white" }}
+        />
+        <GestureRecognizer
+          onSwipe={(direction, state) => this.onSwipe(direction, state)}
+          style={{
+            flex: 1,
+            backgroundColor: this.state.backgroundColor
+          }}
+        >
+          {!this.state.renderBack ? (
+            <CopilotStep
+              text="Prepínanie záložiek možno ovládať stlačením, ako aj pohybom prsta po obrazovke"
+              order={1}
+              name="tabs"
+            >
+              <CopilotTabs />
+            </CopilotStep>
+          ) : (
+            <SafeAreaView {...copilot}>
+              <MaterialTabs
+                items={["Všetky", "Obľubené", "Archív"]}
+                selectedIndex={this.state.selectedTab}
+                onChange={this.setTab}
+                barColor={
+                  this.state.selected.length > 0 && this.state.selected !== []
+                    ? "grey"
+                    : "#1a72b4"
+                }
+                indicatorColor="white"
+                activeTextColor="white"
+              />
+            </SafeAreaView>
+          )}
+
+          <View style={styles.headerStyle}>
+            <Searchbar
+              placeholder="Vyhľadať"
+              onChangeText={query => {
+                this.setState({ firstQuery: query });
+                this.props.setQuery(query);
+              }}
+              onIconPress={query => {
+                this.setState({ firstQuery: query });
+                this.props.setQuery(query);
+              }}
+              value={this.state.firstQuery}
+            />
+          </View>
+
+          {!this.state.renderBack ? (
+            <CopilotStep
+              order={3}
+              name="list"
+              text="Tu sa nachádzajú vaše poznámky a zoznamy, krátkym stlačením prejdete na jednotlivú položku, dlhým stlačením ju označíte, označené položky možno následne vymazať alebo archivovať"
+            >
+              <CopilotList />
+            </CopilotStep>
+          ) : (
+            <ScrollView style={styles.scrollStyle}>
+              <FlatList
+                data={this.handleDataCheck()}
+                renderItem={({ item }) => (
+                  <Animatable.View animation="slideInLeft">
+                    <List.Item
+                      key={item.key}
+                      title={item.title}
+                      description={
+                        item.text
+                          ? item.text
+                          : item.list.length >= 3
+                          ? `${item.list[0].text}, ${item.list[1].text}, ${
+                              item.list[2].text
+                            }...`
+                          : `${item.list[0].text + "..."}`
+                      }
+                      style={
+                        this.state.selected.includes(item)
+                          ? { backgroundColor: "#b2b2b2" }
+                          : item.color && item.color !== "#1a72b4"
+                          ? { backgroundColor: `${item.color}`, opacity: 0.9 }
+                          : { backgroundColor: `#ffffff` }
+                      }
+                      onPress={() => {
+                        this.props.selectNote(item);
+                        this.props.navigation.navigate("Details", {
+                          title: item.title,
+                          color: item.color,
+                          id: item.key
+                        });
+                      }}
+                      onLongPress={() => {
+                        this.handleSelect(item);
+                        this.props.navigation.setParams({
+                          len: this.state.selected.length
+                        });
+                      }}
+                      left={props => (
+                        <List.Icon
+                          style={styles.iconStyle}
+                          {...props}
+                          icon={item.text ? "note" : "list"}
+                        />
+                      )}
+                      right={props => (
+                        <View>
+                          <Animatable.View
+                            animation={item.star ? "zoomIn" : undefined}
+                          >
+                            <IconButton
+                              {...props}
+                              color={item.star ? "gold" : "gray"}
+                              icon="star"
+                              style={
+                                dateParam === ""
+                                  ? { marginLeft: 13 }
+                                  : { marginLeft: 5 }
+                              }
+                              onPress={() => {
+                                console.log("pressed", item.title);
+                                this.props.toggleFavorites(
+                                  { star: !item.star },
+                                  item.key
+                                );
+                              }}
+                            />
+                          </Animatable.View>
+                          <Text
+                            style={{ textAlign: "center", marginRight: 10 }}
+                          >
+                            {dateParam === ""
+                              ? moment(item.date).format("DD.MM.YY")
+                              : moment(item.date).format("HH:mm")}
+                          </Text>
+                        </View>
+                      )}
+                    />
+                    <Divider />
+                  </Animatable.View>
+                )}
+              />
+            </ScrollView>
+          )}
 
           <View style={styles.container}>
             <FabComponent navigation={this.props.navigation} />
           </View>
+
           {this.state.selected.length > 0 && this.state.selected !== [] ? (
             <HomeAppBar
               openDatePicker={this.datePicker}
@@ -602,12 +751,28 @@ class Home extends React.Component {
           duration={2000}
         >
           {this.state.selectedTab !== 2
-            ? `V archíve ${this.state.items === 1 || this.state.items > 4 ? "je" : "sú"} ${this.state.items} ${
-                this.state.items === 1 ? "položka" : this.state.items < 5 ? "položky" : "položiek"
+            ? `V archíve ${
+                this.state.items === 1 || this.state.items > 4 ? "je" : "sú"
+              } ${this.state.items} ${
+                this.state.items === 1
+                  ? "položka"
+                  : this.state.items < 5
+                  ? "položky"
+                  : "položiek"
               }`
             : `${this.state.items} ${
-                this.state.items === 1 ? "položka" : this.state.items < 5 ? "položky" : "položiek"
-              } ${this.state.items === 1 ? "bola vytiahnutá z archívu" : this.state.items < 5 ? "boli vytiahnuté z archívu" : "bolo vytiahnutých z archívu"}`}
+                this.state.items === 1
+                  ? "položka"
+                  : this.state.items < 5
+                  ? "položky"
+                  : "položiek"
+              } ${
+                this.state.items === 1
+                  ? "bola vytiahnutá z archívu"
+                  : this.state.items < 5
+                  ? "boli vytiahnuté z archívu"
+                  : "bolo vytiahnutých z archívu"
+              }`}
         </Snackbar>
         <Snackbar
           visible={this.state.openDeleteSnack}
@@ -629,8 +794,18 @@ class Home extends React.Component {
           }}
           duration={5000}
         >
-          {`${this.state.items === 1 ? "Vymazaná" : this.state.items < 5 ? "Vymazané" : "Vymazaných"} ${this.state.items} ${
-            this.state.items === 1 ? "položka" : this.state.items < 5 ? "položky" : "položiek"
+          {`${
+            this.state.items === 1
+              ? "Vymazaná"
+              : this.state.items < 5
+              ? "Vymazané"
+              : "Vymazaných"
+          } ${this.state.items} ${
+            this.state.items === 1
+              ? "položka"
+              : this.state.items < 5
+              ? "položky"
+              : "položiek"
           }`}
         </Snackbar>
         <Snackbar
@@ -657,6 +832,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff"
+  },
+  copilot: {
+    flex: 10
   },
   textStyle: {
     marginTop: 20,
@@ -686,7 +864,7 @@ const styles = StyleSheet.create({
     margin: 0
   },
   headerButton: {
-    marginRight: 130
+    marginRight: 0
   }
 });
 const mapStateToProps = state => {
@@ -713,7 +891,7 @@ const mapDispatchToProps = dispatch => {
       setQuery: setQuery,
       saveNote: saveNote,
       handleDate: handleDate,
-      FABToggle: FABToggle,
+      FABToggle: FABToggle
     },
     dispatch
   );
@@ -722,4 +900,10 @@ const mapDispatchToProps = dispatch => {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(Home);
+)(
+  copilot({
+    overlay: "svg", // or 'view'
+    animated: true
+    // or false
+  })(Home)
+);

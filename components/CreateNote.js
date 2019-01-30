@@ -1,5 +1,3 @@
-
-
 import React, { Component } from "react";
 import {
   View,
@@ -11,7 +9,12 @@ import {
 import { TextInput } from "react-native-paper";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import { saveNote, cacheText, clearCacheNote, setTitle } from "../actions/notesActions";
+import {
+  saveNote,
+  cacheText,
+  clearCacheNote,
+  setTitle
+} from "../actions/notesActions";
 import moment from "moment";
 import AppBar from "./AppBar";
 import {
@@ -30,12 +33,11 @@ import { MaterialHeaderButtons, Item } from "./HeaderButtons";
 import EditableHeader from "./EditableHeader";
 import "moment/locale/sk";
 import FABToggle from "../actions/FABActions";
-import { HeaderBackButton } from 'react-navigation';
+import { HeaderBackButton } from "react-navigation";
 const convert = require("color-convert");
 const uuidv4 = require("uuid/v4");
-
+import { copilot, CopilotStep } from "@okgrow/react-native-copilot";
 class CreateNote extends Component {
-  
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
 
@@ -45,7 +47,7 @@ class CreateNote extends Component {
         backgroundColor: params && params.color ? `${params.color}` : "#1a72b4"
       },
       headerTintColor: "white",
-      headerTitleStyle:  {color: "white"},
+      headerTitleStyle: { color: "white" },
       headerLeft:
         params && params.edit ? (
           <EditableHeader
@@ -54,7 +56,13 @@ class CreateNote extends Component {
             setHeader={() => params.setHeader()}
           />
         ) : (
-          <HeaderBackButton tintColor="white" onPress={()=>{params.handleCache(); navigation.goBack()}}/>
+          <HeaderBackButton
+            tintColor="white"
+            onPress={() => {
+              params.handleCache();
+              navigation.goBack();
+            }}
+          />
         ),
       headerRight: (
         <MaterialHeaderButtons>
@@ -67,7 +75,17 @@ class CreateNote extends Component {
           ) : (
             undefined
           )}
-          <Item title="Uložiť" iconName="" onPress={() => params.saveNote()} disabled={params && params.redirect ? true : false}/>
+          <Item
+            title="Pomoc"
+            iconName="help-outline"
+            onPress={() => params.help()}
+          />
+          <Item
+            title="Uložiť"
+            iconName=""
+            onPress={() => params.saveNote()}
+            disabled={params && params.redirect ? true : false}
+          />
         </MaterialHeaderButtons>
       )
     };
@@ -80,9 +98,9 @@ class CreateNote extends Component {
     this._hideDateTimePicker = this._hideDateTimePicker.bind(this);
     this.editHeader = this.editHeader.bind(this);
     this.handleSetHeader = this.handleSetHeader.bind(this);
-    this.handleHideMenu = this.handleHideMenu.bind(this)
-    this.handleCache = this.handleCache.bind(this)
-    
+    this.handleHideMenu = this.handleHideMenu.bind(this);
+    this.handleCache = this.handleCache.bind(this);
+    this.help = this.help.bind(this);
     this.state = {
       text: this.props.cache.text,
       date: this.props.cache.note_date,
@@ -92,6 +110,7 @@ class CreateNote extends Component {
       editHeader: false,
       color: this.props.cache.note_color,
       error: false,
+      renderBack: true
     };
   }
   componentWillMount() {
@@ -101,13 +120,24 @@ class CreateNote extends Component {
       saveNote: this.handleSaveNote,
       handleCache: this.handleCache,
       redirect: false,
+      help: this.help
     });
     this.setState({
       key: uuidv4()
     });
   }
-  handleHideMenu(){
-    this.props.FABToggle()
+  componentDidMount() {
+    this.props.copilotEvents.on("stop", () => {
+      this.setState({
+        renderBack: true
+      });
+    });
+  }
+  componentWillUnmount() {
+    this.props.copilotEvents.off("stop");
+  }
+  handleHideMenu() {
+    this.props.FABToggle();
   }
   editHeader() {
     let edit = this.props.navigation.state.params.edit;
@@ -120,88 +150,86 @@ class CreateNote extends Component {
       this.props.navigation.setParams({ titleText: this.props.title });
     }
   }
-  handleCache(){
+  handleCache() {
     let payload = {
       text: this.state.text,
       remind: this.state.remind,
       date: this.state.date,
       color: this.state.color,
       reminderDate: this.state.reminderDate
-    }
-    
-    this.props.cacheText(payload)
+    };
+
+    this.props.cacheText(payload);
   }
 
   handleSetHeader() {
     this.props.navigation.setParams({ edit: false });
   }
   handleSaveNote() {
-    if (this.state.text !== ""){
-    if (this.state.remind === true) {
-      console.log("scheduling notification");
-      //TODO DESIGN NOTIF
-      const localNotification = {
+    if (this.state.text !== "") {
+      if (this.state.remind === true) {
+        console.log("scheduling notification");
+        //TODO DESIGN NOTIF
+        const localNotification = {
+          title: this.props.title,
+          body: `Pripomienka Vašej poznámky - ${moment(this.state.date).format(
+            "DD/MM/YYYY, HH:mm"
+          )}`, // (string) — body text of the notification.
+          data: {
+            key: this.state.key,
+            color: this.state.color,
+            title: this.props.title
+          },
+          // (optional) (object) — notification configuration specific to Android.
+          android: {
+            channelId: "reminders",
+            sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
+            icon:
+              "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
+            color: this.state.color, // (optional) (string) — color of the notification icon in notification drawer.
+            priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+            sticky: false, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+            vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+          }
+        };
+
+        const schedulingOptions = {
+          time: Date.parse(this.state.reminderDate)
+        };
+
+        Notifications.scheduleLocalNotificationAsync(
+          localNotification,
+          schedulingOptions
+        );
+      }
+      let payload = {
+        key: this.state.key,
+        date: Date.parse(this.state.date),
         title: this.props.title,
-        body: `Reminder for your note - ${moment(this.state.date).format(
-          "DD/MM/YYYY, HH/mm"
-        )}`, // (string) — body text of the notification.
-        data: {
-          key: this.state.key,
-          color: this.state.color,
-          title: this.props.title
-        },
-        // (optional) (object) — notification configuration specific to Android.
-        android: {
-          channelId: "reminders",
-          sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
-          icon:
-            "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
-          color: this.state.color, // (optional) (string) — color of the notification icon in notification drawer.
-          priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
-          sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
-          vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
-        }
+        text: this.state.text,
+        remind: this.state.remind,
+        reminderDate: this.state.reminderDate,
+        color: this.state.color,
+        star: false,
+        archive: false
       };
+      console.log(payload);
+      this.setState({
+        redirect: true,
+        error: false
+      });
 
-      const schedulingOptions = {
-        time: Date.parse(this.state.reminderDate)
-      };
-
-      Notifications.scheduleLocalNotificationAsync(
-        localNotification,
-        schedulingOptions
-      );
-    }
-    let payload = {
-      key: this.state.key,
-      date: Date.parse(this.state.date),
-      title: this.props.title,
-      text: this.state.text,
-      remind: this.state.remind,
-      reminderDate: this.state.reminderDate,
-      color: this.state.color,
-      star: false,
-      archive: false
-    };
-    console.log(payload);
-    this.setState({
-      redirect: true,
-      error: false
-    });
-    
-    if (payload.title !== "" && payload.text !== "") {
-      this.props.saveNote(payload);
-      this.props.clearCacheNote()
-      this.props.navigation.setParams({redirect: true})
-    }
-    }
-    else{
+      if (payload.title !== "" && payload.text !== "") {
+        this.props.saveNote(payload);
+        this.props.clearCacheNote();
+        this.props.navigation.setParams({ redirect: true });
+      }
+    } else {
       this.setState({
         error: true
-      })
+      });
     }
   }
-
 
   _hideDateTimePicker = () =>
     this.setState({ openDateTime: false, remind: false });
@@ -259,87 +287,142 @@ class CreateNote extends Component {
       console.warn("Cannot open date picker", message);
     }
   }
-  
-      
+  help() {
+    this.setState({
+      renderBack: false
+    });
+    this.props.start();
+  }
 
   render() {
-       
-
-    return (
-      <View style={styles.viewStyle}>
-        <View style={styles.dateStyle}>
-          <View style={styles.dateEditStyle}>
-            <List.Section
-              style={styles.textStyle}
-              title={`${moment(this.state.date).format("LL")} / ${
-                this.state.time
-                  ? this.state.time
-                  : moment(this.props.cache.note_date).format("HH:mm")
-              }`}
-            />
-            <IconButton
-              style={styles.iconStyle}
-              icon="edit"
-              size={20}
-              onPress={() => this.datePicker()}
-            />
-          </View>
-
-          <View style={styles.remindStyle}>
-            <IconButton
-              style={styles.remindIconStyle}
-              color={this.state.remind ? "green" : "black"}
-              icon="notifications"
-              size={20}
-              onPress={() =>
-                this.setState({ remind: true, openDateTime: true })
-              }
-            />
-
-            <Switch
-              value={this.state.remind}
-              color={this.state.color}
-              onValueChange={() => {
-                this.setState({
-                  remind: !this.state.remind,
-                  openDateTime: true
-                });
-              }}
-            />
-          </View>
-        </View>
-
-        <View style={styles.inputStyle}>
-        <HelperText
-          type="error"
-          visible={this.state.error}
-        >
-          Prázdnu poznámku nemožno uložiť
-        </HelperText>
-          <TextInput
-            theme={{ colors: { primary: this.state.color } }}
-            label="Poznámka"
-            value={this.state.text}
-            onChangeText={text => this.setState({ text: text, error: text !== "" ? false : true })}
-            mode="outlined"
-            multiline={true}
-            numberOfLines={12}
-            blurOnSubmit={true}
+    const CopilotDate = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.dateEditStyle}>
+          <List.Section
+            style={styles.textStyle}
+            title={`${moment(this.state.date).format("LL")} / ${
+              this.state.time
+                ? this.state.time
+                : moment(this.props.cache.note_date).format("HH:mm")
+            }`}
           />
-          
+          <IconButton
+            style={styles.iconStyle}
+            icon="edit"
+            size={20}
+            onPress={() => this.datePicker()}
+          />
         </View>
+      );
+    };
+    const CopilotReminder = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.remindStyle}>
+          <IconButton
+            style={styles.remindIconStyle}
+            color={this.state.remind ? "green" : "black"}
+            icon="notifications"
+            size={20}
+            onPress={() => this.setState({ remind: true, openDateTime: true })}
+          />
 
-        <View style={styles.AppBarStyle}>
+          <Switch
+            value={this.state.remind}
+            color={this.state.color}
+            onValueChange={() => {
+              this.setState({
+                remind: !this.state.remind,
+                openDateTime: true
+              });
+            }}
+          />
+        </View>
+      );
+    };
+    const CopilotAppBar = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.AppBarStyle}>
           <AppBar
-          handleHideMenu = {this.handleHideMenu}
-          fab = {this.props.fab}
+            handleHideMenu={this.handleHideMenu}
+            fab={this.props.fab}
             openDatePicker={this.datePicker}
             handleSaveNote={this.handleSaveNote}
             color={this.state.color}
             openModal={this._showModal}
-           
           />
         </View>
+      );
+    };
+    const CopilotInput = ({ copilot }) => {
+      return (
+        <View {...copilot} style={styles.inputStyle}>
+          <HelperText type="error" visible={this.state.error}>
+            Prázdnu poznámku nemožno uložiť
+          </HelperText>
+          <TextInput
+            theme={{ colors: { primary: this.state.color } }}
+            label="Poznámka"
+            value={this.state.text}
+            onChangeText={text =>
+              this.setState({ text: text, error: text !== "" ? false : true })
+            }
+            mode="outlined"
+            multiline={true}
+            numberOfLines={15}
+            blurOnSubmit={true}
+          />
+        </View>
+      );
+    };
+
+    return (
+      <View style={styles.viewStyle}>
+        <View style={styles.dateStyle}>
+          <CopilotStep
+            text="Tu si môžete nastaviť dátum poznámky"
+            order={1}
+            name="date"
+          >
+            <CopilotDate />
+          </CopilotStep>
+          <CopilotStep
+            text="Nastavte pripomienku a dátum pripomienky"
+            order={2}
+            name="remind"
+          >
+            <CopilotReminder />
+          </CopilotStep>
+        </View>
+        {!this.state.renderBack ? (
+          <CopilotStep text="Vaša poznámka" order={3} name="note">
+            <CopilotInput />
+          </CopilotStep>
+        ) : (
+          <View style={styles.inputStyle}>
+            <HelperText type="error" visible={this.state.error}>
+              Prázdnu poznámku nemožno uložiť
+            </HelperText>
+            <TextInput
+              theme={{ colors: { primary: this.state.color } }}
+              label="Poznámka"
+              value={this.state.text}
+              onChangeText={text =>
+                this.setState({ text: text, error: text !== "" ? false : true })
+              }
+              mode="outlined"
+              multiline={true}
+              numberOfLines={15}
+              blurOnSubmit={true}
+            />
+          </View>
+        )}
+        <CopilotStep
+          text="Tu môžete zvoliť zafarbenie poznámky, dátum a vypnúť resp. zapnúť menu"
+          order={4}
+          name="appbar"
+        >
+          <CopilotAppBar />
+        </CopilotStep>
         <DateTimePicker
           isVisible={this.state.remind && this.state.openDateTime}
           onConfirm={this._handleDatePicked}
@@ -360,7 +443,7 @@ class CreateNote extends Component {
           visible={this.state.redirect}
           onDismiss={() => {
             this.setState({ redirect: false });
-            
+
             this.props.navigation.navigate("Home");
             this.props.setTitle("Bez názvu");
           }}
@@ -407,10 +490,10 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   inputStyle: {
-    margin: 10
+    padding: 25
   },
   titleStyle: {
-    marginBottom: 20
+    marginBottom: 0
   },
   buttonStyle: {
     marginTop: 20,
@@ -480,10 +563,26 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => {
-  return bindActionCreators({ saveNote: saveNote, FABToggle: FABToggle, cacheText: cacheText, clearCacheNote: clearCacheNote, setTitle: setTitle }, dispatch);
+  return bindActionCreators(
+    {
+      saveNote: saveNote,
+      FABToggle: FABToggle,
+      cacheText: cacheText,
+      clearCacheNote: clearCacheNote,
+      setTitle: setTitle
+    },
+    dispatch
+  );
 };
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(CreateNote);
+)(
+  copilot({
+    overlay: "svg", // or 'view'
+    animated: true
+
+    // or false
+  })(CreateNote)
+);
