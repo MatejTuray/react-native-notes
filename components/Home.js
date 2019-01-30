@@ -141,6 +141,9 @@ class Home extends React.Component {
     this.props.setFilter(this.state.selectedTab);
     this.props.navigation.setParams({ len: 0 });
   }
+  componentWillUnmount() {
+    this.props.copilotEvents.off("stop");
+  }
   componentDidMount() {
     this.props.copilotEvents.on("stop", () => {
       this.setState({
