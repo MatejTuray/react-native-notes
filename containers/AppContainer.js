@@ -1,67 +1,91 @@
-import React, { Component } from 'react'
-import Home from "../components/Home"
-import Details from "../components/Details"
-import { createStackNavigator, createAppContainer, createDrawerNavigator } from "react-navigation";
-import CreateNote from '../components/CreateNote';
+import React, { Component } from "react";
+import Home from "../components/Home";
+import Details from "../components/Details";
+import {
+  createStackNavigator,
+  createAppContainer,
+  createBottomTabNavigator
+} from "react-navigation";
+import CreateNote from "../components/CreateNote";
 import CreateShoppingList from "../components/CreateShoppingList";
-import {connect} from "react-redux"
-import Letaky from '../components/Letaky';
+import { connect } from "react-redux";
+import Letaky from "../components/Letaky";
 import Reminders from "../components/Reminders";
-
-
-const RootStack = createStackNavigator(
+import Synch from "../components/Synch";
+import Migrate from "../components/Migrate";
+import Settings from "../components/Settings";
+import { createMaterialBottomTabNavigator } from "react-navigation-material-bottom-tabs";
+const SettingsTabs = createMaterialBottomTabNavigator(
   {
-    Home: {screen: Home, path:"home/", navigationOptions: {      
-      
-     
-    } },
-   
-    CreateNote: {screen: CreateNote, path:"createnote/", navigationOptions: {
-     
-  }},
-  CreateShoppingList: {screen: CreateShoppingList, path:"createlist/",navigationOptions: {
-  
-}},
-Details: {screen: Details, path:"details/:id", navigationOptions: {
-  
-}},
-Letaky: {screen: Letaky, path: "letaky"},
-Reminders: {screen: Reminders, path: "reminders"},
+    Nastavenia: Settings,
+    Synchronizácia: Synch,
+    Export: Migrate
+  },
+  { shifting: true, barStyle: { backgroundColor: "#1a72b4" } }
+);
 
-  HomeSelected: {screen: Home, navigationOptions: {
-    title: `Selected items`, 
+SettingsTabs.navigationOptions = ({ navigation }) => {
+  let title;
+  let focusedRouteName =
+    navigation.state.routes[navigation.state.index].routeName;
+  if (focusedRouteName === "Synchronizácia") {
+    title = "Synchronizovať";
+  } else if (focusedRouteName === "Nastavenia") {
+    title = "Nastavenia";
+  } else if ((focusedRouteName = "Export")) {
+    title = "Export";
+  }
+
+  return {
+    title,
     headerStyle: {
-      backgroundColor: 'grey',
+      backgroundColor: "#1a72b4"
     },
     headerTintColor: "white",
     headerTitleStyle: {
       color: "white"
     }
-  
-  } },
-},
+  };
+};
+
+const RootStack = createStackNavigator(
+  {
+    Home: { screen: Home, path: "home/", navigationOptions: {} },
+
+    CreateNote: {
+      screen: CreateNote,
+      path: "createnote/",
+      navigationOptions: {}
+    },
+    CreateShoppingList: {
+      screen: CreateShoppingList,
+      path: "createlist/",
+      navigationOptions: {}
+    },
+    Details: { screen: Details, path: "details/:id", navigationOptions: {} },
+    Letaky: { screen: Letaky, path: "letaky" },
+    Reminders: { screen: Reminders, path: "reminders" },
+    Settings: SettingsTabs,
+
+    HomeSelected: {
+      screen: Home,
+      navigationOptions: {
+        title: `Selected items`,
+        headerStyle: {
+          backgroundColor: "grey"
+        },
+        headerTintColor: "white",
+        headerTitleStyle: {
+          color: "white"
+        }
+      }
+    }
+  },
   {
     initialRouteName: "Home"
   }
 );
 
-const RootDrawer = createDrawerNavigator({
-  Close : {screen: RootStack}
-})
-
-const AppNav = createStackNavigator({
-  Drawer: {
-    screen: RootDrawer,
-    navigationOptions: {
-      header: null,
-      gesturesEnabled: false
-    }
-  }
-}, { headerMode: 'none' })
-
 const AppContainer = createAppContainer(RootStack);
 
-
-
-
-export default AppContainer
+export default AppContainer;

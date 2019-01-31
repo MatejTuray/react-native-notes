@@ -128,7 +128,8 @@ class Home extends React.Component {
       gestureName: "none",
       fetching: false,
       date: "",
-      renderBack: true
+      renderBack: true,
+      test: true
     };
   }
   componentWillMount() {
@@ -640,7 +641,7 @@ class Home extends React.Component {
 
           {!this.state.renderBack ? (
             <CopilotStep
-              order={3}
+              order={2}
               name="list"
               text="Tu sa nachádzajú vaše poznámky a zoznamy, krátkym stlačením prejdete na jednotlivú položku, dlhým stlačením ju označíte, označené položky možno následne vymazať alebo archivovať"
             >
@@ -837,7 +838,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff"
   },
   copilot: {
-    flex: 10
+    flex: 60,
+    marginTop: 5,
+    paddingBottom: 10
   },
   textStyle: {
     marginTop: 20,
@@ -905,7 +908,7 @@ export default connect(
   mapDispatchToProps
 )(
   copilot({
-    overlay: "svg", // or 'view'
+    overlay: "view", // or 'view'
     animated: true
     // or false
   })(Home)
