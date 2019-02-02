@@ -21,7 +21,8 @@ import {
   deleteNote,
   toggleFavorites,
   setArchive,
-  saveNote
+  saveNote,
+  setThemeCache
 } from "../actions/notesActions";
 import { bindActionCreators } from "redux";
 import MaterialTabs from "react-native-material-tabs";
@@ -64,7 +65,7 @@ class Home extends React.Component {
           ? `${moment(params.date).format("LL")}`
           : "Domov",
       headerStyle: {
-        backgroundColor: params && params.len > 0 ? "grey" : "#1a72b4",
+        backgroundColor: params && params.len > 0 ? "grey" : params.primary,
         elevation: 0
       },
       headerTintColor: "white",
@@ -137,14 +138,18 @@ class Home extends React.Component {
       datePicker: this.datePicker,
       clearDate: this.clearDate,
       toggleMenu: this.props.FABToggle,
-      help: this.help
+      help: this.help,
+      primary: this.props.theme.primary,
+      secondary: this.props.theme.secondary
     });
     this.props.setFilter(this.state.selectedTab);
     this.props.navigation.setParams({ len: 0 });
+    this.props.setThemeCache(this.props.theme.primary);
   }
   componentWillUnmount() {
     this.props.copilotEvents.off("stop");
   }
+
   componentDidMount() {
     this.props.copilotEvents.on("stop", () => {
       this.setState({
@@ -488,7 +493,7 @@ class Home extends React.Component {
             barColor={
               this.state.selected.length > 0 && this.state.selected !== []
                 ? "grey"
-                : "#1a72b4"
+                : this.props.theme.primary
             }
             indicatorColor="white"
             activeTextColor="white"
@@ -520,7 +525,7 @@ class Home extends React.Component {
                     style={
                       this.state.selected.includes(item)
                         ? { backgroundColor: "#b2b2b2" }
-                        : item.color && item.color !== "#1a72b4"
+                        : item.color && item.color !== this.props.theme.primary
                         ? { backgroundColor: `${item.color}`, opacity: 0.9 }
                         : { backgroundColor: `#ffffff` }
                     }
@@ -616,7 +621,7 @@ class Home extends React.Component {
                 barColor={
                   this.state.selected.length > 0 && this.state.selected !== []
                     ? "grey"
-                    : "#1a72b4"
+                    : this.props.theme.primary
                 }
                 indicatorColor="white"
                 activeTextColor="white"
@@ -627,6 +632,7 @@ class Home extends React.Component {
           <View style={styles.headerStyle}>
             <Searchbar
               placeholder="Vyhľadať"
+              theme={{ colors: { primary: this.props.theme.primary } }}
               onChangeText={query => {
                 this.setState({ firstQuery: query });
                 this.props.setQuery(query);
@@ -668,7 +674,8 @@ class Home extends React.Component {
                       style={
                         this.state.selected.includes(item)
                           ? { backgroundColor: "#b2b2b2" }
-                          : item.color && item.color !== "#1a72b4"
+                          : item.color &&
+                            item.color !== this.props.theme.primary
                           ? { backgroundColor: `${item.color}`, opacity: 0.9 }
                           : { backgroundColor: `#ffffff` }
                       }
@@ -883,7 +890,8 @@ const mapStateToProps = state => {
     dateSelect: getDateVisibleNotes(state),
     reselect: getVisibleNotes(state),
     search: getVisibleNotesWithTextQuery(state),
-    dateSelectWithQuery: dateSelectWithQuery(state)
+    dateSelectWithQuery: dateSelectWithQuery(state),
+    theme: state.theme
   };
 };
 const mapDispatchToProps = dispatch => {
@@ -897,7 +905,8 @@ const mapDispatchToProps = dispatch => {
       setQuery: setQuery,
       saveNote: saveNote,
       handleDate: handleDate,
-      FABToggle: FABToggle
+      FABToggle: FABToggle,
+      setThemeCache: setThemeCache
     },
     dispatch
   );
@@ -908,7 +917,7 @@ export default connect(
   mapDispatchToProps
 )(
   copilot({
-    overlay: "view", // or 'view'
+    overlay: "svg", // or 'view'
     animated: true
     // or false
   })(Home)

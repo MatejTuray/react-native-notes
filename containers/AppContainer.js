@@ -8,20 +8,23 @@ import {
 } from "react-navigation";
 import CreateNote from "../components/CreateNote";
 import CreateShoppingList from "../components/CreateShoppingList";
-import { connect } from "react-redux";
+
 import Letaky from "../components/Letaky";
 import Reminders from "../components/Reminders";
 import Synch from "../components/Synch";
 import Migrate from "../components/Migrate";
 import Settings from "../components/Settings";
 import { createMaterialBottomTabNavigator } from "react-navigation-material-bottom-tabs";
+import { connect } from "react-redux";
 const SettingsTabs = createMaterialBottomTabNavigator(
   {
-    Nastavenia: Settings,
+    Témy: Settings,
     Synchronizácia: Synch,
     Export: Migrate
   },
-  { shifting: true, barStyle: { backgroundColor: "#1a72b4" } }
+  {
+    shifting: true
+  }
 );
 
 SettingsTabs.navigationOptions = ({ navigation }) => {
@@ -30,8 +33,8 @@ SettingsTabs.navigationOptions = ({ navigation }) => {
     navigation.state.routes[navigation.state.index].routeName;
   if (focusedRouteName === "Synchronizácia") {
     title = "Synchronizovať";
-  } else if (focusedRouteName === "Nastavenia") {
-    title = "Nastavenia";
+  } else if (focusedRouteName === "Témy") {
+    title = "Témy";
   } else if ((focusedRouteName = "Export")) {
     title = "Export";
   }
@@ -39,8 +42,9 @@ SettingsTabs.navigationOptions = ({ navigation }) => {
   return {
     title,
     headerStyle: {
-      backgroundColor: "#1a72b4"
+      backgroundColor: navigation.state.params.primary
     },
+
     headerTintColor: "white",
     headerTitleStyle: {
       color: "white"
@@ -82,10 +86,22 @@ const RootStack = createStackNavigator(
     }
   },
   {
-    initialRouteName: "Home"
+    initialRouteName: "Home",
+    initialRouteParams: { primary: "ffffff" }
   }
 );
 
-const AppContainer = createAppContainer(RootStack);
+const Wrapper = createAppContainer(RootStack);
 
-export default AppContainer;
+const AppContainer = props => {
+  console.log(props);
+  return <Wrapper {...props} key={props.theme.key} />;
+};
+
+const mapStateToProps = (state, ownProps) => {
+  return {
+    theme: state.theme
+  };
+};
+
+export default connect(mapStateToProps)(AppContainer);

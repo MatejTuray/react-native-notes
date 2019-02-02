@@ -34,7 +34,6 @@ import EditableHeader from "./EditableHeader";
 import "moment/locale/sk";
 import FABToggle from "../actions/FABActions";
 import { HeaderBackButton } from "react-navigation";
-const convert = require("color-convert");
 const uuidv4 = require("uuid/v4");
 import { copilot, CopilotStep } from "@okgrow/react-native-copilot";
 class CreateNote extends Component {
@@ -44,7 +43,8 @@ class CreateNote extends Component {
     return {
       title: params.titleText ? `${params.titleText}` : undefined,
       headerStyle: {
-        backgroundColor: params && params.color ? `${params.color}` : "#1a72b4"
+        backgroundColor:
+          params && params.color ? `${params.color}` : params.primary
       },
       headerTintColor: "white",
       headerTitleStyle: { color: "white" },
@@ -120,7 +120,9 @@ class CreateNote extends Component {
       saveNote: this.handleSaveNote,
       handleCache: this.handleCache,
       redirect: false,
-      help: this.help
+      help: this.help,
+      primary: this.props.theme.primary,
+      secondary: this.props.theme.secondary
     });
     this.setState({
       key: uuidv4()
@@ -221,7 +223,7 @@ class CreateNote extends Component {
 
       if (payload.title !== "" && payload.text !== "") {
         this.props.saveNote(payload);
-        this.props.clearCacheNote();
+        this.props.clearCacheNote(this.props.theme.primary);
         this.props.navigation.setParams({ redirect: true });
       }
     } else {
@@ -559,7 +561,8 @@ const styles = StyleSheet.create({
 const mapStateToProps = state => ({
   title: state.title,
   fab: state.fab,
-  cache: state.cache
+  cache: state.cache,
+  theme: state.theme
 });
 
 const mapDispatchToProps = dispatch => {

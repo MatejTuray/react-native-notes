@@ -52,7 +52,8 @@ class CreateShoppingList extends Component {
     return {
       title: params.titleText ? `${params.titleText}` : undefined,
       headerStyle: {
-        backgroundColor: params && params.color ? `${params.color}` : "#1a72b4"
+        backgroundColor:
+          params && params.color ? `${params.color}` : params.primary
       },
       headerTintColor: "white",
       headerTitleStyle: {
@@ -140,7 +141,9 @@ class CreateShoppingList extends Component {
       saveNote: this.handleSaveNote,
       handleCache: this.handleCache,
       redirect: false,
-      help: this.help
+      help: this.help,
+      primary: this.props.theme.primary,
+      secondary: this.props.theme.secondary
     });
     this.setState({
       key: uuidv4()
@@ -245,7 +248,7 @@ class CreateShoppingList extends Component {
         error: false
       });
       this.props.saveNote(payload);
-      this.props.clearCacheList();
+      this.props.clearCacheList(this.props.theme.primary);
       this.props.navigation.setParams({ redirect: true });
     } else {
       this.setState({
@@ -783,6 +786,7 @@ class CreateShoppingList extends Component {
           onConfirm={this._handleDatePicked}
           onCancel={this._hideDateTimePicker}
           mode="datetime"
+          datePickerModeAndroid="spinner"
         />
 
         <Snackbar
@@ -923,7 +927,8 @@ const styles = StyleSheet.create({
 const mapStateToProps = state => ({
   title: state.title,
   fab: state.fab,
-  cache: state.cache
+  cache: state.cache,
+  theme: state.theme
 });
 
 const mapDispatchToProps = dispatch => {

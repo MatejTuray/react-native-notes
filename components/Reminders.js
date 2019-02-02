@@ -15,7 +15,7 @@ class Reminders extends Component {
     return {
       title: "Pripomienky",
       headerStyle: {
-        backgroundColor: "#1a72b4"
+        backgroundColor: params.primary
       },
       headerTintColor: "white",
       headerTitleStyle: {
@@ -36,6 +36,7 @@ class Reminders extends Component {
       <View>
         <Searchbar
           placeholder="Vyhľadať"
+          theme={{ colors: { primary: this.props.theme.primary } }}
           onChangeText={query => {
             this.setState({ firstQuery: query });
             this.props.setQuery(query);
@@ -135,7 +136,8 @@ const mapStateToProps = state => {
   return {
     notes: state.notes,
     reminders: reminders(state),
-    remindersQuery: remindersWithQuery(state)
+    remindersQuery: remindersWithQuery(state),
+    theme: state.theme
   };
 };
 

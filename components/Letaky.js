@@ -12,15 +12,15 @@ import * as Animatable from "react-native-animatable";
 import axios from "axios";
 const uuidv4 = require("uuid/v4");
 import { Constants, WebBrowser } from "expo";
-
-export default class Letaky extends Component {
+import { connect } from "react-redux";
+class Letaky extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
 
     return {
       title: "Aktuálne letáky",
       headerStyle: {
-        backgroundColor: "#1a72b4"
+        backgroundColor: params.primary
       },
       headerTintColor: "white",
       headerTitleStyle: {
@@ -42,6 +42,10 @@ export default class Letaky extends Component {
   };
 
   componentWillMount() {
+    this.props.navigation.setParams({
+      primary: this.props.theme.primary,
+      secondary: this.props.theme.secondary
+    });
     this.setState({
       loading: true
     });
@@ -79,7 +83,7 @@ export default class Letaky extends Component {
               alignSelf: "center"
             }}
           >
-            <ActivityIndicator size={200} color="#1a72b4" />
+            <ActivityIndicator size={200} color={this.props.theme.primary} />
           </View>
         ) : (
           <ScrollView style={styles.scrollStyle}>
@@ -127,3 +131,13 @@ const styles = StyleSheet.create({
     elevation: 5
   }
 });
+const mapStateToProps = state => {
+  return {
+    theme: state.theme
+  };
+};
+
+export default connect(
+  mapStateToProps,
+  null
+)(Letaky);

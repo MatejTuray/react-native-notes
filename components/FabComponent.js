@@ -24,13 +24,13 @@ export class FabComponent extends React.Component {
             style={styles.fabStyle}
             open={this.state.open}
             icon={this.state.open ? "today" : "menu"}
-            theme={{ colors: { accent: "#B41A34" } }}
+            theme={{ colors: { accent: this.props.theme.secondary } }}
             actions={[
               {
                 icon: "note-add",
                 label: "Vytvoriť poznámku",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
                 onPress: () =>
                   this.props.navigation.navigate("CreateNote", {
@@ -43,7 +43,7 @@ export class FabComponent extends React.Component {
                 icon: "list",
                 label: "Vytvoriť zoznam",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
                 onPress: () => {
                   this.props.navigation.navigate("CreateShoppingList", {
@@ -58,31 +58,43 @@ export class FabComponent extends React.Component {
                 icon: "book",
                 label: "Letáky",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
-                onPress: () => this.props.navigation.navigate("Letaky")
+                onPress: () =>
+                  this.props.navigation.navigate("Letaky", {
+                    primary: this.props.theme.primary,
+                    secondary: this.props.theme.secondary
+                  })
               },
               {
                 icon: "notifications",
                 label: "Pripomienky",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
-                onPress: () => this.props.navigation.navigate("Reminders")
+                onPress: () =>
+                  this.props.navigation.navigate("Reminders", {
+                    primary: this.props.theme.primary,
+                    secondary: this.props.theme.secondary
+                  })
               },
               {
                 icon: "settings",
                 label: "Nastavenia",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
-                onPress: () => this.props.navigation.navigate("Settings")
+                onPress: () =>
+                  this.props.navigation.navigate("Settings", {
+                    primary: this.props.theme.primary,
+                    secondary: this.props.theme.secondary
+                  })
               },
               {
                 icon: "home",
                 label: "Domov",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
                 onPress: () => this.props.navigation.navigate("Home")
               },
@@ -90,7 +102,7 @@ export class FabComponent extends React.Component {
                 icon: "settings-power",
                 label: "Vypnúť",
                 style: {
-                  backgroundColor: "#B41A34"
+                  backgroundColor: this.props.theme.secondary
                 },
                 onPress: () => BackHandler.exitApp()
               }
@@ -115,9 +127,9 @@ const styles = StyleSheet.create({
     marginBottom: 0
   },
   PortalStyle: {
-    color: "#aa6a39",
+    color: "white",
     marginBottom: 0,
-    paddingBottom: 90
+    paddingBottom: 0
   }
 });
 
@@ -125,7 +137,8 @@ const mapStateToProps = state => {
   return {
     fab: state.fab,
     title: state.title,
-    cache: state.cache
+    cache: state.cache,
+    theme: state.theme
   };
 };
 const mapDispatchToProps = dispatch => {

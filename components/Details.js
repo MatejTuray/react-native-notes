@@ -99,6 +99,8 @@ class Details extends Component {
       handleUpdate: this.handleUpdate,
       toggleAdd: this.toggleAdd,
       adding: false,
+      primary: this.props.theme.primary,
+      secondary: this.props.theme.secondary,
       list:
         this.props.note.list && this.props.note.list.length > 0 ? true : false
     });
@@ -718,7 +720,8 @@ const mapStateToProps = state => {
   return {
     note: state.selectedNote,
     notes: state.notes,
-    fab: state.fab
+    fab: state.fab,
+    theme: state.theme
   };
 };
 
