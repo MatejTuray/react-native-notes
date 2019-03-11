@@ -21,7 +21,10 @@ import Slider from "react-native-slider";
 import { ToastAndroid } from "react-native";
 import { bindActionCreators } from "redux";
 import FABToggle from "../actions/FABActions";
-const labels = ["E-mail", "Telefón", "Platnosť linku", "Potvrdenie"];
+import axios from "axios";
+import moment from "moment";
+const uuidv4 = require("uuid").v4;
+const labels = ["E-mail", "Platnosť linku", "Potvrdenie"];
 const regex = /(?!.*\.{2})^([a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+(\.[a-z\d!#$%&'*+\-\/=?^_`{|}~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+)*|"((([ \t]*\r\n)?[ \t]+)?([\x01-\x08\x0b\x0c\x0e-\x1f\x7f\x21\x23-\x5b\x5d-\x7e\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|\\[\x01-\x09\x0b\x0c\x0d-\x7f\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))*(([ \t]*\r\n)?[ \t]+)?")@(([a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\d\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.)+([a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]|[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF][a-z\d\-._~\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]*[a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])\.?$/i;
 class Migrate extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -35,7 +38,6 @@ class Migrate extends Component {
   constructor(props) {
     super(props);
     this.validateEmail = this.validateEmail.bind(this);
-    this.validatePhone = this.validatePhone.bind(this);
     this.validateRadio = this.validateRadio.bind(this);
     this.validateProgress = this.validateProgress.bind(this);
     this.validateAndSend = this.validateAndSend.bind(this);
@@ -44,9 +46,7 @@ class Migrate extends Component {
     this.state = {
       currentPage: 0,
       email: "",
-      phone: "",
       emailValid: true,
-      phoneValid: true,
       value: 0,
       duration: 0,
       visible: false
@@ -62,7 +62,7 @@ class Migrate extends Component {
   }
   componentDidMount() {
     ToastAndroid.showWithGravityAndOffset(
-      "Váš e-mail a telefónne číslo je použité len na zabezpečenie migrácie Vašich údajov do iných zariadení",
+      "Váš e-mail je použitý len na zabezpečenie migrácie Vašich údajov do iných zariadení",
       ToastAndroid.LONG,
       ToastAndroid.BOTTOM,
       0,
@@ -80,33 +80,13 @@ class Migrate extends Component {
       this.setState({ currentPage: 0 });
     }
   }
-  validatePhone(phone) {
-    let phoneNum = parsePhoneNumberFromString(phone, "SK");
-    if (phoneNum.isValid() && phoneNum.getType() === "MOBILE") {
-      this.setState({
-        phoneValid: true,
-        phone: phoneNum.formatNational()
-      });
-      if (this.state.email !== "" && this.state.emailValid) {
-        this.setState({
-          currentPage: 2
-        });
-      }
-    } else {
-      this.setState({
-        phoneValid: false,
-        currentPage: 1
-      });
-    }
-  }
+
   validateRadio() {
     if (
       this.state.value !== 0 &&
       this.state.duration !== 0 &&
       this.state.email !== "" &&
-      this.state.emailValid &&
-      this.state.phone !== "" &&
-      this.state.phoneValid
+      this.state.emailValid
     ) {
       return true;
     } else {
@@ -114,12 +94,7 @@ class Migrate extends Component {
     }
   }
   validateProgress() {
-    if (
-      this.state.email !== "" &&
-      this.state.emailValid &&
-      this.state.phone !== "" &&
-      this.state.phoneValid
-    ) {
+    if (this.state.email !== "" && this.state.emailValid) {
       return true;
     } else {
       return false;
@@ -127,26 +102,41 @@ class Migrate extends Component {
   }
   validateAndSend() {
     let res = regex.test(String(this.state.email).toLowerCase());
-    let phoneNum = parsePhoneNumberFromString(this.state.phone, "SK");
     if (
       res &&
-      phoneNum.isValid() &&
       this.validateProgress() &&
       this.state.value !== 0 &&
       this.state.duration !== 0
     ) {
       let payload = {
-        mail: this.state.email,
-        number: this.state.phone,
-        value: this.state.value,
-        duration: this.state.duration,
-        notes: this.props.notes.present
+        key: uuidv4(),
+        email: this.state.email,
+        type: this.state.value === 1 ? "one-time" : "multiple",
+        duration: moment()
+          .add(this.state.duration, "d")
+          .toDate(),
+        data: this.props.notes.present
       };
       console.log(payload);
       this.setState({
-        currentPage: 4,
+        currentPage: 3,
         loading: true
       });
+      axios
+        .post("https://react-native-notesapi.herokuapp.com/api/export", payload)
+        .then(res => {
+          ToastAndroid.showWithGravityAndOffset(
+            "Export úspešný, skontrolujte si svoj e-mail",
+            ToastAndroid.LONG,
+            ToastAndroid.BOTTOM,
+            0,
+            170
+          );
+          setTimeout(() => {
+            this.props.navigation.navigate("Home");
+          }, 2000);
+        })
+        .catch(e => console.log(e));
     }
   }
   _showModal = () => this.setState({ visible: true });
@@ -181,7 +171,7 @@ class Migrate extends Component {
         <View style={styles.step}>
           <StepIndicator
             customStyles={stepIndicatorStyles}
-            stepCount={4}
+            stepCount={3}
             direction="horizontal"
             currentPosition={this.state.currentPage}
             labels={labels}
@@ -209,27 +199,6 @@ class Migrate extends Component {
             </HelperText>
           </View>
           <View>
-            <TextInput
-              label="Číslo mobilného telefónu"
-              mode="flat"
-              theme={{ colors: { primary: this.props.theme.primary } }}
-              error={!this.state.phoneValid}
-              keyboardType="phone-pad"
-              style={{ marginTop: 5, backgroundColor: "#ffffff" }}
-              value={this.state.phone}
-              onChangeText={phone => {
-                this.setState({ phone });
-              }}
-              onSubmitEditing={() => {
-                this.setState({ phone: this.state.phone });
-                this.validatePhone(this.state.phone);
-              }}
-            />
-            <HelperText type="error" visible={!this.state.phoneValid}>
-              Prosím zadajte platné mobilné číslo pre SR
-            </HelperText>
-          </View>
-          <View>
             <RadioButton.Group
               onValueChange={value => {
                 if (value > 0) {
@@ -241,7 +210,7 @@ class Migrate extends Component {
             >
               <List.Item
                 title={"Jednorazový link"}
-                style={{ marginBottom: 5 }}
+                style={{ marginBottom: 5, marginTop: 10 }}
                 onLongPress={() => {
                   console.log("press");
                 }}
@@ -339,6 +308,7 @@ class Migrate extends Component {
                   step={1}
                   thumbTintColor={this.props.theme.secondary}
                   trackStyle={{ backgroundColor: this.props.theme.primary }}
+                  animateTransitions={true}
                 />
               </View>
             ) : (
@@ -350,7 +320,7 @@ class Migrate extends Component {
             loading={this.state.loading}
             color={this.props.theme.primary}
             style={{
-              marginTop: 5,
+              marginTop: 25,
               marginHorizontal: 50
             }}
             mode="contained"
@@ -374,7 +344,8 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "stretch",
-    marginHorizontal: 30
+    marginHorizontal: 30,
+    marginTop: 20
   },
   step: {
     marginTop: 10,
