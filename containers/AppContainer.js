@@ -19,7 +19,6 @@ import { connect } from "react-redux";
 const SettingsTabs = createMaterialBottomTabNavigator(
   {
     Témy: Settings,
-    Synchronizácia: Synch,
     Export: Migrate
   },
   {

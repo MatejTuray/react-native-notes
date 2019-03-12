@@ -119,6 +119,7 @@ class Home extends React.Component {
     this.handleDataCheck = this.handleDataCheck.bind(this);
     this.clearDate = this.clearDate.bind(this);
     this.help = this.help.bind(this);
+    this.fetchData = this.fetchData.bind(this);
     this.state = {
       text: "",
       title: "",
@@ -225,21 +226,79 @@ class Home extends React.Component {
     });
     this.props.start();
   }
+  fetchData(input) {
+    console.log(input);
+    if (
+      this.props.notes.present.find(item => item.key === input.key) ||
+      this.props.reselect.find(item => item.key === input.key)
+    ) {
+      Alert.alert(
+        "Tento záznam je už uložený",
+        `${input.title} @ ${moment(input.date).format("DD/MM/YYYY HH:mm")}`
+      );
+      this.setState({
+        fetching: false
+      });
+    } else {
+      this.props.saveNote(input);
+      Alert.alert("Uložené", `${input.title} bola úspešne uložená`);
+      if (input.remind === true && input.reminderDate > input.date) {
+        console.log("scheduling notification");
+        //TODO DESIGN NOTIF
+        const localNotification = {
+          title: input.title,
+          body: `Reminder for your note - ${moment(input.date).format(
+            "DD/MM/YYYY, HH/mm"
+          )}`, // (string) — body text of the notification.
+          data: {
+            key: input.key,
+            color: input.color,
+            title: input.title
+          },
+          // (optional) (object) — notification configuration specific to Android.
+          android: {
+            channelId: "reminders",
+            sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
+            icon:
+              "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
+            color: input.color, // (optional) (string) — color of the notification icon in notification drawer.
+            priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+            sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+            vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+          }
+        };
+
+        const schedulingOptions = {
+          time: Date.parse(input.reminderDate)
+        };
+
+        Notifications.scheduleLocalNotificationAsync(
+          localNotification,
+          schedulingOptions
+        );
+      }
+      this.setState({
+        fetching: false
+      });
+    }
+  }
+
   _handleUrl = url => {
     this.setState({
       fetching: true
     });
     let parsed = url;
     let key;
+    let ekey;
     if (parsed) {
       console.log(parsed);
       try {
         key = parsed.match(/key=([^&]*)/)[1];
       } catch (e) {
         console.log(e);
+        ekey = parsed.match(/export=([^&]*)/)[1];
       }
     }
-    console.log(key);
     try {
       if (
         key !== undefined &&
@@ -250,84 +309,28 @@ class Home extends React.Component {
           .get(`https://react-native-notesapi.herokuapp.com/api/items/${key}`)
           .then(res => {
             console.log(res.data);
-            this.setState({
-              itemData: res.data
-            });
-            if (
-              this.props.notes.present.find(
-                item => item.key === this.state.itemData.key
-              ) ||
-              this.props.reselect.find(
-                item => item.key === this.state.itemData.key
-              )
-            ) {
-              Alert.alert(
-                "Tento záznam je už uložený",
-                `${this.state.itemData.title} @ ${moment(
-                  this.state.itemData.date
-                ).format("DD/MM/YYYY HH:mm")}`
-              );
-              this.setState({
-                fetching: false
-              });
-            } else {
-              this.props.saveNote(this.state.itemData);
-              Alert.alert(
-                "Uložené",
-                `${this.state.itemData.title} bola úspešne uložená`
-              );
-              if (this.state.itemData.remind === true) {
-                console.log("scheduling notification");
-                //TODO DESIGN NOTIF
-                const localNotification = {
-                  title: this.state.itemData.title,
-                  body: `Reminder for your note - ${moment(
-                    this.state.itemData.date
-                  ).format("DD/MM/YYYY, HH/mm")}`, // (string) — body text of the notification.
-                  data: {
-                    key: this.state.itemData.key,
-                    color: this.state.itemData.color,
-                    title: this.state.itemData.title
-                  },
-                  // (optional) (object) — notification configuration specific to Android.
-                  android: {
-                    channelId: "reminders",
-                    sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
-                    icon:
-                      "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
-                    color: this.state.itemData.color, // (optional) (string) — color of the notification icon in notification drawer.
-                    priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
-                    sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
-                    vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
-                  }
-                };
+            this.fetchData(res.data);
+          });
+      } else if (
+        ekey !== undefined &&
+        (this.state.connection !== "none" &&
+          this.state.connection !== "unknown")
+      ) {
+        axios
+          .get(`https://react-native-notesapi.herokuapp.com/api/import/${ekey}`)
+          .then(res => {
+            console.log(res.data.data);
 
-                const schedulingOptions = {
-                  time: Date.parse(this.state.itemData.reminderDate)
-                };
-
-                Notifications.scheduleLocalNotificationAsync(
-                  localNotification,
-                  schedulingOptions
-                );
-              }
-              this.setState({
-                fetching: false
-              });
+            for (let elem of res.data.data) {
+              this.fetchData(elem);
             }
           })
-          .catch(e =>
-            Alert.alert(
-              "Neplatný odkaz",
-              "Tento odkaz už nie je platný, je nutné vygenerovať nový"
-            )
-          );
+          .catch(e => console.log(e));
       }
     } catch (e) {
       console.log(e);
     }
   };
-
   setTab = selectedTab => {
     this.setState({ selectedTab });
     this.props.setFilter(selectedTab);

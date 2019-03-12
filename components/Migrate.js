@@ -125,10 +125,11 @@ class Migrate extends Component {
       axios
         .post("https://react-native-notesapi.herokuapp.com/api/export", payload)
         .then(res => {
+          console.log(res);
           ToastAndroid.showWithGravityAndOffset(
             "Export úspešný, skontrolujte si svoj e-mail",
             ToastAndroid.LONG,
-            ToastAndroid.BOTTOM,
+            ToastAndroid.TOP,
             0,
             170
           );
