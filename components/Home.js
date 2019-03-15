@@ -131,7 +131,9 @@ class Home extends React.Component {
       fetching: false,
       date: "",
       renderBack: true,
-      test: true
+      test: true,
+      alreadySaved: 0,
+      saved: 0
     };
   }
   componentWillMount() {
@@ -226,60 +228,115 @@ class Home extends React.Component {
     });
     this.props.start();
   }
-  fetchData(input) {
+  fetchData(input, modifier) {
     console.log(input);
-    if (
-      this.props.notes.present.find(item => item.key === input.key) ||
-      this.props.reselect.find(item => item.key === input.key)
-    ) {
-      Alert.alert(
-        "Tento záznam je už uložený",
-        `${input.title} @ ${moment(input.date).format("DD/MM/YYYY HH:mm")}`
-      );
-      this.setState({
-        fetching: false
-      });
-    } else {
-      this.props.saveNote(input);
-      Alert.alert("Uložené", `${input.title} bola úspešne uložená`);
-      if (input.remind === true && input.reminderDate > input.date) {
-        console.log("scheduling notification");
-        //TODO DESIGN NOTIF
-        const localNotification = {
-          title: input.title,
-          body: `Reminder for your note - ${moment(input.date).format(
-            "DD/MM/YYYY, HH/mm"
-          )}`, // (string) — body text of the notification.
-          data: {
-            key: input.key,
-            color: input.color,
-            title: input.title
-          },
-          // (optional) (object) — notification configuration specific to Android.
-          android: {
-            channelId: "reminders",
-            sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
-            icon:
-              "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
-            color: input.color, // (optional) (string) — color of the notification icon in notification drawer.
-            priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
-            sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
-            vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
-          }
-        };
-
-        const schedulingOptions = {
-          time: Date.parse(input.reminderDate)
-        };
-
-        Notifications.scheduleLocalNotificationAsync(
-          localNotification,
-          schedulingOptions
+    if (!modifier) {
+      if (
+        this.props.notes.present.find(item => item.key === input.key) ||
+        this.props.reselect.find(item => item.key === input.key)
+      ) {
+        Alert.alert(
+          "Tento záznam je už uložený",
+          `${input.title} @ ${moment(input.date).format("DD/MM/YYYY HH:mm")}`
         );
+        this.setState({
+          fetching: false
+        });
+      } else {
+        this.props.saveNote(input);
+        Alert.alert("Uložené", `${input.title} bola úspešne uložená`);
+        if (input.remind === true && input.reminderDate > input.date) {
+          console.log("scheduling notification");
+          //TODO DESIGN NOTIF
+          const localNotification = {
+            title: input.title,
+            body: `Pripomienka poznámky - ${moment(input.date).format(
+              "DD/MM/YYYY, HH/mm"
+            )}`, // (string) — body text of the notification.
+            data: {
+              key: input.key,
+              color: input.color,
+              title: input.title
+            },
+            // (optional) (object) — notification configuration specific to Android.
+            android: {
+              channelId: "reminders",
+              sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
+              icon:
+                "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
+              color: input.color, // (optional) (string) — color of the notification icon in notification drawer.
+              priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+              sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+              vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+            }
+          };
+
+          const schedulingOptions = {
+            time: Date.parse(input.reminderDate)
+          };
+
+          Notifications.scheduleLocalNotificationAsync(
+            localNotification,
+            schedulingOptions
+          );
+        }
+        this.setState({
+          fetching: false
+        });
       }
-      this.setState({
-        fetching: false
-      });
+    } else if (modifier === "multiple") {
+      if (
+        this.props.notes.present.find(item => item.key === input.key) ||
+        this.props.reselect.find(item => item.key === input.key)
+      ) {
+        this.setState({
+          fetching: false,
+          alreadySaved: this.state.alreadySaved + 1
+        });
+      } else {
+        this.props.saveNote(input);
+        this.setState({
+          saved: this.state.saved + 1
+        });
+        if (input.remind === true && input.reminderDate > input.date) {
+          console.log("scheduling notification");
+          //TODO DESIGN NOTIF
+          const localNotification = {
+            title: input.title,
+            body: `Pripomienka poznámky - ${moment(input.date).format(
+              "DD/MM/YYYY, HH/mm"
+            )}`, // (string) — body text of the notification.
+            data: {
+              key: input.key,
+              color: input.color,
+              title: input.title
+            },
+            // (optional) (object) — notification configuration specific to Android.
+            android: {
+              channelId: "reminders",
+              sound: true, // (optional) (boolean) — if true, play a sound. Default: false.
+              icon:
+                "https://cdn1.iconfinder.com/data/icons/hawcons/32/699318-icon-47-note-important-512.png", // URL of icon to display in notification drawer.
+              color: input.color, // (optional) (string) — color of the notification icon in notification drawer.
+              priority: "max", // (optional) (min | low | high | max) — android may present notifications according to the priority, for example a high priority notification will likely to be shown as a heads-up notification.
+              sticky: true, // (optional) (boolean) — if true, the notification will be sticky and not dismissable by user. The notification must be programmatically dismissed. Default: false.
+              vibrate: true // (optional) (boolean or array) — if true, vibrate the device. An array can be supplied to specify the vibration pattern, e.g. - [ 0, 500 ].
+            }
+          };
+
+          const schedulingOptions = {
+            time: Date.parse(input.reminderDate)
+          };
+
+          Notifications.scheduleLocalNotificationAsync(
+            localNotification,
+            schedulingOptions
+          );
+        }
+        this.setState({
+          fetching: false
+        });
+      }
     }
   }
 
@@ -322,8 +379,13 @@ class Home extends React.Component {
             console.log(res.data.data);
 
             for (let elem of res.data.data) {
-              this.fetchData(elem);
+              this.fetchData(elem, "multiple");
             }
+            Alert.alert(
+              `Bolo uložených ${this.state.saved} položiek, ${
+                this.state.alreadySaved
+              } položiek sa už nachádzalo v aplikácii`
+            );
           })
           .catch(e => console.log(e));
       }

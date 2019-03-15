@@ -99,6 +99,18 @@ export class FabComponent extends React.Component {
                 onPress: () => this.props.navigation.navigate("Home")
               },
               {
+                icon: "info",
+                label: "O aplikácii",
+                style: {
+                  backgroundColor: this.props.theme.secondary
+                },
+                onPress: () =>
+                  this.props.navigation.navigate("Info", {
+                    primary: this.props.theme.primary,
+                    secondary: this.props.theme.secondary
+                  })
+              },
+              {
                 icon: "settings-power",
                 label: "Vypnúť",
                 style: {

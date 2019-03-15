@@ -16,6 +16,7 @@ import Migrate from "../components/Migrate";
 import Settings from "../components/Settings";
 import { createMaterialBottomTabNavigator } from "react-navigation-material-bottom-tabs";
 import { connect } from "react-redux";
+import Info from "../components/Info";
 const SettingsTabs = createMaterialBottomTabNavigator(
   {
     Témy: Settings,
@@ -69,7 +70,7 @@ const RootStack = createStackNavigator(
     Letaky: { screen: Letaky, path: "letaky" },
     Reminders: { screen: Reminders, path: "reminders" },
     Settings: SettingsTabs,
-
+    Info: Info,
     HomeSelected: {
       screen: Home,
       navigationOptions: {

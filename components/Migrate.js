@@ -66,7 +66,7 @@ class Migrate extends Component {
       ToastAndroid.LONG,
       ToastAndroid.BOTTOM,
       0,
-      170
+      300
     );
     setTimeout(() => this.props.FABToggle(), 4000);
   }
