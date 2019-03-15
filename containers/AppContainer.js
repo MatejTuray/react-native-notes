@@ -20,7 +20,8 @@ import Info from "../components/Info";
 const SettingsTabs = createMaterialBottomTabNavigator(
   {
     Témy: Settings,
-    Export: Migrate
+    Export: Migrate,
+    Info: Info
   },
   {
     shifting: true
@@ -31,8 +32,8 @@ SettingsTabs.navigationOptions = ({ navigation }) => {
   let title;
   let focusedRouteName =
     navigation.state.routes[navigation.state.index].routeName;
-  if (focusedRouteName === "Synchronizácia") {
-    title = "Synchronizovať";
+  if (focusedRouteName === "Info") {
+    title = "O aplikácii";
   } else if (focusedRouteName === "Témy") {
     title = "Témy";
   } else if ((focusedRouteName = "Export")) {
@@ -70,7 +71,7 @@ const RootStack = createStackNavigator(
     Letaky: { screen: Letaky, path: "letaky" },
     Reminders: { screen: Reminders, path: "reminders" },
     Settings: SettingsTabs,
-    Info: Info,
+
     HomeSelected: {
       screen: Home,
       navigationOptions: {

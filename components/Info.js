@@ -2,19 +2,19 @@ import React, { Component } from "react";
 import { Text, StyleSheet, ScrollView, View } from "react-native";
 import { connect } from "react-redux";
 import { List } from "react-native-paper";
+import TouchableBounce from "react-native/Libraries/Components/Touchable/TouchableBounce";
+import { MaterialIcons } from "@expo/vector-icons";
+const tabBarIcon = name => ({ tintColor, horizontal }) => (
+  <MaterialIcons name={name} color={tintColor} size={horizontal ? 17 : 24} />
+);
+
 class Info extends Component {
   static navigationOptions = ({ navigation }) => {
     const { params } = navigation.state;
-
     return {
-      title: "O aplikácii",
-      headerStyle: {
-        backgroundColor: params.primary
-      },
-      headerTintColor: "white",
-      headerTitleStyle: {
-        color: "white"
-      }
+      tabBarIcon: tabBarIcon("info"),
+      tabBarButtonComponent: TouchableBounce,
+      tabBarColor: params.primary
     };
   };
   render() {

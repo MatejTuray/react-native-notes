@@ -63,7 +63,7 @@ class Migrate extends Component {
   componentDidMount() {
     ToastAndroid.showWithGravityAndOffset(
       "Váš e-mail je použitý len na zabezpečenie migrácie Vašich údajov do iných zariadení",
-      ToastAndroid.LONG,
+      ToastAndroid.SHORT,
       ToastAndroid.BOTTOM,
       0,
       300
@@ -128,10 +128,10 @@ class Migrate extends Component {
           console.log(res);
           ToastAndroid.showWithGravityAndOffset(
             "Export úspešný, skontrolujte si svoj e-mail",
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM,
             0,
-            170
+            300
           );
           setTimeout(() => {
             this.props.navigation.navigate("Home");
