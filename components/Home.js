@@ -391,8 +391,23 @@ class Home extends React.Component {
                 this.state.alreadySaved
               } položiek sa už nachádzalo v aplikácii`
             );
+            if (res.data.type === "one-time") {
+              axios
+                .delete(
+                  `https://react-native-notesapi.herokuapp.com/api/import/${ekey}`
+                )
+                .then(res => {
+                  console.log(res.data.data);
+                });
+            }
           })
-          .catch(e => console.log(e));
+          .catch(e => {
+            console.log(e);
+            Alert.alert(
+              "Chyba importu",
+              "Vyskytla sa chyba pri importovaní údajov"
+            );
+          });
       }
     } catch (e) {
       console.log(e);
