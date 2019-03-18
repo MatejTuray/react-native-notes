@@ -113,11 +113,16 @@ class Migrate extends Component {
         email: this.state.email,
         type: this.state.value === 1 ? "one-time" : "multiple",
         duration: moment()
-          .add(this.state.duration, "d")
+          .add(
+            this.state.duration !== -1
+              ? this.state.duration
+              : this.state.duration + 1,
+            "d"
+          )
           .toDate(),
         data: this.props.notes.present
       };
-      console.log(payload);
+      console.log(moment(payload.duration).format("LLLL"));
       this.setState({
         currentPage: 3,
         loading: true

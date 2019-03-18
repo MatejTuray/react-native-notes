@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   PortalStyle: {
     color: "white",
     marginBottom: 0,
-    paddingBottom: 0
+    paddingBottom: 100
   }
 });
 

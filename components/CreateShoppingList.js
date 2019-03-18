@@ -130,7 +130,8 @@ class CreateShoppingList extends Component {
       editPrice: false,
       selected: [],
       error: false,
-      renderBack: true
+      renderBack: true,
+      errorEmpty: false
     };
   }
   componentWillMount() {
@@ -198,7 +199,7 @@ class CreateShoppingList extends Component {
         const localNotification = {
           title: this.props.title,
           body: `Pripomienka Vášho zoznamu - ${moment(this.state.date).format(
-            "DD/MM/YYYY, time: HH:mm"
+            "DD/MM/YYYY, HH:mm"
           )}`, // (string) — body text of the notification.
           data: {
             key: this.state.key,
@@ -449,28 +450,37 @@ class CreateShoppingList extends Component {
               });
             }}
             onSubmitEditing={() => {
-              this.setState({
-                error: false,
-                list: this.state.list.concat({
-                  text: this.state.text,
-                  status: false,
-                  editing: false,
-                  editValue: false,
-                  value: 1,
-                  price: 0,
-                  selected: false,
-                  key: uuidv4()
-                })
-              });
-              console.log(this.state.list);
-              this.setState({
-                text: ""
-              });
+              if (this.state.text !== "") {
+                this.setState({
+                  error: false,
+                  list: this.state.list.concat({
+                    text: this.state.text,
+                    status: false,
+                    editing: false,
+                    editValue: false,
+                    value: 1,
+                    price: 0,
+                    selected: false,
+                    key: uuidv4()
+                  })
+                });
+                console.log(this.state.list);
+                this.setState({
+                  text: ""
+                });
+              } else {
+                this.setState({
+                  errorEmpty: true
+                });
+              }
             }}
             mode="flat"
           />
           <HelperText type="error" visible={this.state.error}>
             Pridajte prosím aspoň jednu položku do zoznamu
+          </HelperText>
+          <HelperText type="error" visible={this.state.errorEmpty}>
+            Nemožno pridať položku bez názvu
           </HelperText>
         </View>
       );
@@ -515,28 +525,38 @@ class CreateShoppingList extends Component {
                 });
               }}
               onSubmitEditing={() => {
-                this.setState({
-                  error: false,
-                  list: this.state.list.concat({
-                    text: this.state.text,
-                    status: false,
-                    editing: false,
-                    editValue: false,
-                    value: 1,
-                    price: 0,
-                    selected: false,
-                    key: uuidv4()
-                  })
-                });
-                console.log(this.state.list);
-                this.setState({
-                  text: ""
-                });
+                if (this.state.text !== "") {
+                  this.setState({
+                    error: false,
+                    errorEmpty: false,
+                    list: this.state.list.concat({
+                      text: this.state.text,
+                      status: false,
+                      editing: false,
+                      editValue: false,
+                      value: 1,
+                      price: 0,
+                      selected: false,
+                      key: uuidv4()
+                    })
+                  });
+                  console.log(this.state.list);
+                  this.setState({
+                    text: ""
+                  });
+                } else {
+                  this.setState({
+                    errorEmpty: true
+                  });
+                }
               }}
               mode="flat"
             />
             <HelperText type="error" visible={this.state.error}>
               Pridajte prosím aspoň jednu položku do zoznamu
+            </HelperText>
+            <HelperText type="error" visible={this.state.errorEmpty}>
+              Nemožno pridať položku bez názvu
             </HelperText>
           </View>
         )}
@@ -786,7 +806,6 @@ class CreateShoppingList extends Component {
           onConfirm={this._handleDatePicked}
           onCancel={this._hideDateTimePicker}
           mode="datetime"
-          datePickerModeAndroid="spinner"
         />
 
         <Snackbar

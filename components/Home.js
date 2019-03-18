@@ -353,7 +353,11 @@ class Home extends React.Component {
         key = parsed.match(/key=([^&]*)/)[1];
       } catch (e) {
         console.log(e);
-        ekey = parsed.match(/export=([^&]*)/)[1];
+        try {
+          ekey = parsed.match(/export=([^&]*)/)[1];
+        } catch (error) {
+          console.log(error);
+        }
       }
     }
     try {
@@ -382,6 +386,7 @@ class Home extends React.Component {
               this.fetchData(elem, "multiple");
             }
             Alert.alert(
+              "Uloženie",
               `Bolo uložených ${this.state.saved} položiek, ${
                 this.state.alreadySaved
               } položiek sa už nachádzalo v aplikácii`
@@ -469,11 +474,9 @@ class Home extends React.Component {
   handleArchive() {
     for (let elem of this.state.selected) {
       if (
-        (this.props.notes.present.find(
+        this.props.notes.present.find(
           item => item.key === elem.key && item.archive === false
-        ) &&
-          this.state.selectedTab === 0) ||
-        this.state.selectedTab === 2
+        )
       ) {
         this.props.setArchive({ archive: !elem.archive }, elem.key);
         let items = this.state.selected.length;
@@ -485,6 +488,7 @@ class Home extends React.Component {
         });
         this.props.navigation.setParams({ len: 0 });
       } else {
+        this.props.setArchive({ archive: !elem.archive }, elem.key);
         this.setState({
           infoSnack: true
         });
@@ -827,28 +831,12 @@ class Home extends React.Component {
           duration={2000}
         >
           {this.state.selectedTab !== 2
-            ? `V archíve ${
-                this.state.items === 1 || this.state.items > 4 ? "je" : "sú"
-              } ${this.state.items} ${
-                this.state.items === 1
-                  ? "položka"
-                  : this.state.items < 5
-                  ? "položky"
-                  : "položiek"
-              }`
-            : `${this.state.items} ${
-                this.state.items === 1
-                  ? "položka"
-                  : this.state.items < 5
-                  ? "položky"
-                  : "položiek"
-              } ${
-                this.state.items === 1
-                  ? "bola vytiahnutá z archívu"
-                  : this.state.items < 5
-                  ? "boli vytiahnuté z archívu"
-                  : "bolo vytiahnutých z archívu"
-              }`}
+            ? this.state.items !== 1
+              ? `Položky boli archivované`
+              : `Položka bola archivovaná`
+            : this.state.items !== 1
+            ? `Položky boli vytiahnuté z archívu`
+            : `Položka bola vytiahnutá z archívu`}
         </Snackbar>
         <Snackbar
           visible={this.state.openDeleteSnack}
@@ -897,7 +885,9 @@ class Home extends React.Component {
           }}
           duration={3000}
         >
-          Táto položka sa už nachádza v archíve
+          {this.state.items !== 1
+            ? `Položka bola vytiahnutá z archívu`
+            : `Položky boli vytiahnuté z archívu`}
         </Snackbar>
       </View>
     );
