@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 1,
     height: 300,
-    marginBottom: 55
+    marginBottom: 155
   },
   listItemStyle: {
     backgroundColor: "white"
